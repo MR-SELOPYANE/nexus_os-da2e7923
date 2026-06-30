@@ -1174,6 +1174,59 @@ export const useOS = create<OSState>()(
           appId: "photos",
         });
       },
+
+      // ----- clipboard manager -----
+      clipboard: [],
+      copyToClipboard: (text, source) => {
+        const trimmed = text?.toString() ?? "";
+        if (!trimmed.trim()) return;
+        set((s) => {
+          const existing = s.clipboard.find((c) => c.text === trimmed);
+          if (existing) {
+            return {
+              clipboard: [
+                { ...existing, time: Date.now(), source: source ?? existing.source },
+                ...s.clipboard.filter((c) => c.id !== existing.id),
+              ],
+            };
+          }
+          const entry: ClipEntry = {
+            id: `clip${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`,
+            text: trimmed,
+            time: Date.now(),
+            source,
+          };
+          const pinned = s.clipboard.filter((c) => c.pinned);
+          const unpinned = s.clipboard.filter((c) => !c.pinned).slice(0, 49);
+          return { clipboard: [entry, ...pinned, ...unpinned] };
+        });
+      },
+      pasteClip: (id) => {
+        const entry = get().clipboard.find((c) => c.id === id);
+        if (!entry) return null;
+        try {
+          navigator.clipboard?.writeText(entry.text).catch(() => {});
+        } catch {
+          /* ignore */
+        }
+        set((s) => ({
+          clipboard: [
+            { ...entry, time: Date.now() },
+            ...s.clipboard.filter((c) => c.id !== id),
+          ],
+        }));
+        return entry.text;
+      },
+      removeClip: (id) =>
+        set((s) => ({ clipboard: s.clipboard.filter((c) => c.id !== id) })),
+      pinClip: (id) =>
+        set((s) => ({
+          clipboard: s.clipboard.map((c) =>
+            c.id === id ? { ...c, pinned: !c.pinned } : c
+          ),
+        })),
+      clearClipboard: () =>
+        set((s) => ({ clipboard: s.clipboard.filter((c) => c.pinned) })),
     }),
     {
       name: "nexus-os-v7",
