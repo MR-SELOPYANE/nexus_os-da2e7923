@@ -111,6 +111,13 @@ export function OSRoot() {
         setHudOpen((v) => !v);
         return;
       }
+      // Clipboard manager: Ctrl+Shift+V
+      if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === "v") {
+        e.preventDefault();
+        openApp("clipboard");
+        return;
+      }
+
 
       if (e.ctrlKey && e.shiftKey && e.key === "Escape") {
         e.preventDefault();
