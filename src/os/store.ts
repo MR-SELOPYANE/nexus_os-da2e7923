@@ -655,6 +655,34 @@ export const useOS = create<OSState>()(
           return { fs: root, trash: [entry, ...s.trash] };
         }),
 
+      trash: [],
+      restoreFromTrash: (id) =>
+        set((s) => {
+          const entry = s.trash.find((t) => t.id === id);
+          if (!entry) return {};
+          const root = clone(s.fs);
+          const parts = normalizeParts(entry.originalPath);
+          const name = parts.pop()!;
+          const dir = ensureFolder(root, parts);
+          let finalName = name;
+          let n = 1;
+          while (dir.children[finalName]) {
+            const dot = name.lastIndexOf(".");
+            finalName =
+              dot > 0
+                ? `${name.slice(0, dot)} (${n})${name.slice(dot)}`
+                : `${name} (${n})`;
+            n++;
+          }
+          dir.children[finalName] = clone(entry.node);
+          return { fs: root, trash: s.trash.filter((t) => t.id !== id) };
+        }),
+      permanentlyDeleteTrash: (id) =>
+        set((s) => ({ trash: s.trash.filter((t) => t.id !== id) })),
+      emptyTrash: () => set({ trash: [] }),
+
+
+
 
       renameNode: (path, newName) =>
         set((s) => {
