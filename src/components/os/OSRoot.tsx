@@ -82,6 +82,36 @@ export function OSRoot() {
     return () => clearInterval(t);
   }, [loggedIn, tickProcesses]);
 
+  // Global clipboard capture — listen for copy/cut anywhere in NEXUS
+  useEffect(() => {
+    if (!loggedIn) return;
+    const onCopy = () => {
+      const sel = window.getSelection()?.toString() ?? "";
+      const text = sel.trim()
+        ? sel
+        : (document.activeElement as HTMLInputElement | HTMLTextAreaElement | null)
+            ?.value?.toString
+          ? (() => {
+              const el = document.activeElement as HTMLInputElement | HTMLTextAreaElement;
+              const s = el.selectionStart ?? 0;
+              const e = el.selectionEnd ?? 0;
+              return s !== e ? el.value.slice(s, e) : "";
+            })()
+          : "";
+      if (text && text.trim()) {
+        const tag = (document.activeElement?.tagName ?? "").toLowerCase();
+        useOS.getState().copyToClipboard(text, tag || "selection");
+      }
+    };
+    window.addEventListener("copy", onCopy);
+    window.addEventListener("cut", onCopy);
+    return () => {
+      window.removeEventListener("copy", onCopy);
+      window.removeEventListener("cut", onCopy);
+    };
+  }, [loggedIn]);
+
+
   // Keyboard shortcuts
   useEffect(() => {
     if (!loggedIn) return;
