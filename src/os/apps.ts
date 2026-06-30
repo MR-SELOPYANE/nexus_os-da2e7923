@@ -15,6 +15,7 @@ import {
   Music2,
   Image as ImageIcon,
   Trash2,
+  Clipboard as ClipboardIcon,
   type LucideIcon,
 } from "lucide-react";
 import type { AppId } from "./store";
