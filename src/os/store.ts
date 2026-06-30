@@ -1254,6 +1254,21 @@ export const useOS = create<OSState>()(
         })),
       clearClipboard: () =>
         set((s) => ({ clipboard: s.clipboard.filter((c) => c.pinned) })),
+
+      // ----- accessibility -----
+      accessibility: {
+        highContrast: false,
+        colorBlind: "none",
+        magnifier: false,
+        magnifierZoom: 2,
+        largeCursor: false,
+        stickyKeys: false,
+        perfHud: false,
+        ttsRate: 1,
+        onScreenKeyboard: false,
+      },
+      setAccessibility: (patch) =>
+        set((s) => ({ accessibility: { ...s.accessibility, ...patch } })),
     }),
     {
       name: "nexus-os-v7",
