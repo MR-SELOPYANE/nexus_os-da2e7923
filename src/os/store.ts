@@ -381,6 +381,9 @@ const DEFAULT_SIZE: Record<AppId, { w: number; h: number }> = {
   photos: { w: 760, h: 540 },
   recyclebin: { w: 680, h: 480 },
   clipboard: { w: 560, h: 520 },
+  accessibility: { w: 640, h: 580 },
+  recorder: { w: 540, h: 460 },
+  appstore: { w: 820, h: 600 },
 };
 
 const SYSTEM_PROCESSES: Omit<Process, "cpu" | "memory">[] = [
