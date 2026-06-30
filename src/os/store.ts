@@ -214,8 +214,15 @@ interface OSState {
   fs: FolderNode;
   writeFile: (path: string, content: string) => void;
   createFolder: (path: string) => void;
-  deleteNode: (path: string) => void;
+  deleteNode: (path: string, opts?: { permanent?: boolean }) => void;
   renameNode: (path: string, newName: string) => void;
+
+  // recycle bin
+  trash: TrashEntry[];
+  restoreFromTrash: (id: string) => void;
+  permanentlyDeleteTrash: (id: string) => void;
+  emptyTrash: () => void;
+
 
   notifications: NotificationItem[];
   notify: (n: Omit<NotificationItem, "id" | "time">) => void;
