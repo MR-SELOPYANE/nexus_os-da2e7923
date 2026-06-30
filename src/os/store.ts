@@ -25,7 +25,8 @@ export type AppId =
   | "clock"
   | "media"
   | "photos"
-  | "recyclebin";
+  | "recyclebin"
+  | "clipboard";
 
 
 export interface Desktop {
