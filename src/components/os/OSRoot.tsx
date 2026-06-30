@@ -105,6 +105,13 @@ export function OSRoot() {
         setSpotlightOpen((v) => !v);
         return;
       }
+      // Summon Nexus HUD: Ctrl+Shift+J
+      if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === "j") {
+        e.preventDefault();
+        setHudOpen((v) => !v);
+        return;
+      }
+
       if (e.ctrlKey && e.shiftKey && e.key === "Escape") {
         e.preventDefault();
         openApp("taskmanager");
