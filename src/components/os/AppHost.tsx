@@ -54,6 +54,9 @@ export function AppHost({ win }: { win: WindowState }) {
       return <Photos />;
     case "recyclebin":
       return <RecycleBin />;
+    case "clipboard":
+      return <ClipboardManager />;
+
 
     default:
       return null;
