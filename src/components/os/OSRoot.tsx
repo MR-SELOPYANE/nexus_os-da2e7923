@@ -34,6 +34,8 @@ export function OSRoot() {
   const [notifOpen, setNotifOpen] = useState(false);
   const [menu, setMenu] = useState<{ x: number; y: number } | null>(null);
   const [spotlightOpen, setSpotlightOpen] = useState(false);
+  const [hudOpen, setHudOpen] = useState(false);
+
   const lastNotifId = useRef<string | null>(null);
 
   useEffect(() => setHydrated(true), []);
