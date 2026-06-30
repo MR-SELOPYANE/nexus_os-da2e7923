@@ -49,6 +49,9 @@ export function AppHost({ win }: { win: WindowState }) {
       return <Media />;
     case "photos":
       return <Photos />;
+    case "recyclebin":
+      return <RecycleBin />;
+
     default:
       return null;
   }
