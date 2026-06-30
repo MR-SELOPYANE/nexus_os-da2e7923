@@ -201,7 +201,11 @@ export function OSRoot() {
       <Taskbar onToggleNotifications={() => setNotifOpen((v) => !v)} />
       <Spotlight open={spotlightOpen} onClose={() => setSpotlightOpen(false)} />
 
+      <HudLauncher onClick={() => setHudOpen((v) => !v)} active={hudOpen} />
+      {hudOpen && <HudAssistant onClose={() => setHudOpen(false)} />}
+
       {menu && <DesktopContextMenu x={menu.x} y={menu.y} onClose={() => setMenu(null)} />}
+
 
       {/* Brightness overlay */}
       {quick.brightness < 100 && (
