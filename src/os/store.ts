@@ -1249,6 +1249,7 @@ export const useOS = create<OSState>()(
         activeDesktopId: s.activeDesktopId,
         appVolumes: s.appVolumes,
         trash: s.trash,
+        clipboard: s.clipboard,
 
       }),
     }
