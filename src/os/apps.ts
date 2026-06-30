@@ -14,9 +14,11 @@ import {
   CalendarDays,
   Music2,
   Image as ImageIcon,
+  Trash2,
   type LucideIcon,
 } from "lucide-react";
 import type { AppId } from "./store";
+
 
 export interface AppMeta {
   id: AppId;
