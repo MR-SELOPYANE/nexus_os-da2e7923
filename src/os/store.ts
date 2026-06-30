@@ -1292,6 +1292,7 @@ export const useOS = create<OSState>()(
         appVolumes: s.appVolumes,
         trash: s.trash,
         clipboard: s.clipboard,
+        accessibility: s.accessibility,
 
       }),
     }
