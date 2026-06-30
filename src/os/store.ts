@@ -630,16 +630,31 @@ export const useOS = create<OSState>()(
           return { fs: root };
         }),
 
-      deleteNode: (path) =>
+      deleteNode: (path, opts) =>
         set((s) => {
           const root = clone(s.fs);
           const parts = normalizeParts(path);
           const name = parts.pop();
           if (!name) return {};
+          // Prevent recycling things that already live in the trash
+          const inTrash = parts[0] === "home" && parts[1] === ".Trash";
           const parent = ensureFolder(root, parts);
+          const node = parent.children[name];
+          if (!node) return {};
           delete parent.children[name];
-          return { fs: root };
+          if (opts?.permanent || inTrash) {
+            return { fs: root };
+          }
+          const entry: TrashEntry = {
+            id: uid(),
+            name,
+            originalPath: "/" + [...parts, name].join("/"),
+            deletedAt: Date.now(),
+            node: clone(node),
+          };
+          return { fs: root, trash: [entry, ...s.trash] };
         }),
+
 
       renameNode: (path, newName) =>
         set((s) => {
