@@ -14,6 +14,8 @@ import { Network } from "./apps/Network";
 import { Clock } from "./apps/Clock";
 import { Media } from "./apps/Media";
 import { Photos } from "./apps/Photos";
+import { RecycleBin } from "./apps/RecycleBin";
+
 
 export function AppHost({ win }: { win: WindowState }) {
   switch (win.appId) {
@@ -47,6 +49,9 @@ export function AppHost({ win }: { win: WindowState }) {
       return <Media />;
     case "photos":
       return <Photos />;
+    case "recyclebin":
+      return <RecycleBin />;
+
     default:
       return null;
   }

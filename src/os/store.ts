@@ -24,7 +24,9 @@ export type AppId =
   | "network"
   | "clock"
   | "media"
-  | "photos";
+  | "photos"
+  | "recyclebin";
+
 
 export interface Desktop {
   id: string;
@@ -45,6 +47,15 @@ export interface Alarm {
   label: string;
   enabled: boolean;
 }
+
+export interface TrashEntry {
+  id: string;
+  name: string;
+  originalPath: string;
+  deletedAt: number;
+  node: FSNode;
+}
+
 
 export interface QuickSettings {
   doNotDisturb: boolean;
@@ -212,8 +223,15 @@ interface OSState {
   fs: FolderNode;
   writeFile: (path: string, content: string) => void;
   createFolder: (path: string) => void;
-  deleteNode: (path: string) => void;
+  deleteNode: (path: string, opts?: { permanent?: boolean }) => void;
   renameNode: (path: string, newName: string) => void;
+
+  // recycle bin
+  trash: TrashEntry[];
+  restoreFromTrash: (id: string) => void;
+  permanentlyDeleteTrash: (id: string) => void;
+  emptyTrash: () => void;
+
 
   notifications: NotificationItem[];
   notify: (n: Omit<NotificationItem, "id" | "time">) => void;
@@ -317,6 +335,7 @@ const APP_TITLES: Record<AppId, string> = {
   clock: "Clock & Calendar",
   media: "Media Player",
   photos: "Photos",
+  recyclebin: "Recycle Bin",
 };
 
 const DEFAULT_SIZE: Record<AppId, { w: number; h: number }> = {
@@ -335,6 +354,7 @@ const DEFAULT_SIZE: Record<AppId, { w: number; h: number }> = {
   clock: { w: 620, h: 520 },
   media: { w: 640, h: 520 },
   photos: { w: 760, h: 540 },
+  recyclebin: { w: 680, h: 480 },
 };
 
 const SYSTEM_PROCESSES: Omit<Process, "cpu" | "memory">[] = [
@@ -610,16 +630,59 @@ export const useOS = create<OSState>()(
           return { fs: root };
         }),
 
-      deleteNode: (path) =>
+      deleteNode: (path, opts) =>
         set((s) => {
           const root = clone(s.fs);
           const parts = normalizeParts(path);
           const name = parts.pop();
           if (!name) return {};
+          // Prevent recycling things that already live in the trash
+          const inTrash = parts[0] === "home" && parts[1] === ".Trash";
           const parent = ensureFolder(root, parts);
+          const node = parent.children[name];
+          if (!node) return {};
           delete parent.children[name];
-          return { fs: root };
+          if (opts?.permanent || inTrash) {
+            return { fs: root };
+          }
+          const entry: TrashEntry = {
+            id: uid(),
+            name,
+            originalPath: "/" + [...parts, name].join("/"),
+            deletedAt: Date.now(),
+            node: clone(node),
+          };
+          return { fs: root, trash: [entry, ...s.trash] };
         }),
+
+      trash: [],
+      restoreFromTrash: (id) =>
+        set((s) => {
+          const entry = s.trash.find((t) => t.id === id);
+          if (!entry) return {};
+          const root = clone(s.fs);
+          const parts = normalizeParts(entry.originalPath);
+          const name = parts.pop()!;
+          const dir = ensureFolder(root, parts);
+          let finalName = name;
+          let n = 1;
+          while (dir.children[finalName]) {
+            const dot = name.lastIndexOf(".");
+            finalName =
+              dot > 0
+                ? `${name.slice(0, dot)} (${n})${name.slice(dot)}`
+                : `${name} (${n})`;
+            n++;
+          }
+          dir.children[finalName] = clone(entry.node);
+          return { fs: root, trash: s.trash.filter((t) => t.id !== id) };
+        }),
+      permanentlyDeleteTrash: (id) =>
+        set((s) => ({ trash: s.trash.filter((t) => t.id !== id) })),
+      emptyTrash: () => set({ trash: [] }),
+
+
+
 
       renameNode: (path, newName) =>
         set((s) => {
@@ -1112,6 +1175,8 @@ export const useOS = create<OSState>()(
         desktops: s.desktops,
         activeDesktopId: s.activeDesktopId,
         appVolumes: s.appVolumes,
+        trash: s.trash,
+
       }),
     }
   )

@@ -132,14 +132,19 @@ registerCommand({
 
 registerCommand({
   name: "rm",
-  description: "Remove a file or folder",
+  description: "Remove a file or folder (use -f to bypass Recycle Bin)",
   run: ({ cwd, store, args, print }) => {
-    if (!args[0]) return print("rm: missing operand", "err");
-    const p = resolveRelative(cwd, args[0]);
-    if (!resolvePath(store.fs, p)) return print(`rm: ${args[0]}: No such file`, "err");
-    store.deleteNode(p);
+    const flags = args.filter((a) => a.startsWith("-"));
+    const rest = args.filter((a) => !a.startsWith("-"));
+    if (!rest[0]) return print("rm: missing operand", "err");
+    const p = resolveRelative(cwd, rest[0]);
+    if (!resolvePath(store.fs, p)) return print(`rm: ${rest[0]}: No such file`, "err");
+    const permanent = flags.includes("-f") || flags.includes("-rf") || flags.includes("-fr");
+    store.deleteNode(p, { permanent });
+    print(permanent ? `removed ${rest[0]}` : `moved ${rest[0]} to Recycle Bin`);
   },
 });
+
 
 registerCommand({
   name: "tree",
