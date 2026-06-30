@@ -338,6 +338,7 @@ const DEFAULT_SIZE: Record<AppId, { w: number; h: number }> = {
   clock: { w: 620, h: 520 },
   media: { w: 640, h: 520 },
   photos: { w: 760, h: 540 },
+  recyclebin: { w: 680, h: 480 },
 };
 
 const SYSTEM_PROCESSES: Omit<Process, "cpu" | "memory">[] = [
