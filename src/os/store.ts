@@ -24,7 +24,9 @@ export type AppId =
   | "network"
   | "clock"
   | "media"
-  | "photos";
+  | "photos"
+  | "recyclebin";
+
 
 export interface Desktop {
   id: string;
