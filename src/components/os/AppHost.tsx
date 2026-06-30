@@ -61,6 +61,13 @@ export function AppHost({ win }: { win: WindowState }) {
       return <RecycleBin />;
     case "clipboard":
       return <ClipboardManager />;
+    case "accessibility":
+      return <Accessibility />;
+    case "recorder":
+      return <ScreenRecorder />;
+    case "appstore":
+      return <AppStore />;
+
 
 
     default:
