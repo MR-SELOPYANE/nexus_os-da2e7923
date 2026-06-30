@@ -157,23 +157,16 @@ function newTab(url = "nexus://home"): Tab {
   return { id: Math.random().toString(36).slice(2), stack: [url], idx: 0, title: AURORA_SITES[url]?.title ?? "New Tab" };
 }
 
+function proxyUrl(absUrl: string, mode: "raw" | "reader"): string {
+  return `/api/public/proxy?mode=${mode}&url=${encodeURIComponent(absUrl)}`;
+}
+
 export function Browser({ payload }: { payload?: Record<string, unknown> } = {}) {
   const initial = (payload?.url as string) ?? "nexus://home";
   const online = useOS((s) => s.network.online);
   const [tabs, setTabs] = useState<Tab[]>([newTab(initial)]);
   const [activeId, setActiveId] = useState(tabs[0].id);
   const [readerMode, setReaderMode] = useState(false);
-  const active = tabs.find((t) => t.id === activeId) ?? tabs[0];
-  const current = active.stack[active.idx];
-  const [bar, setBar] = useState(current);
-  const [iframeKey, setIframeKey] = useState(0);
-
-
-export function Browser({ payload }: { payload?: Record<string, unknown> } = {}) {
-  const initial = (payload?.url as string) ?? "nexus://home";
-  const online = useOS((s) => s.network.online);
-  const [tabs, setTabs] = useState<Tab[]>([newTab(initial)]);
-  const [activeId, setActiveId] = useState(tabs[0].id);
   const active = tabs.find((t) => t.id === activeId) ?? tabs[0];
   const current = active.stack[active.idx];
   const [bar, setBar] = useState(current);
@@ -218,7 +211,6 @@ export function Browser({ payload }: { payload?: Record<string, unknown> } = {})
   const isNexus = current.startsWith("nexus://");
   const isHttp = current.startsWith("http");
   const site = isNexus ? AURORA_SITES[current] : undefined;
-  const blocked = isHttp && isLikelyBlocked(current);
 
   return (
     <div className="flex h-full flex-col bg-card">
@@ -271,6 +263,18 @@ export function Browser({ payload }: { payload?: Record<string, unknown> } = {})
           />
         </div>
         {isHttp && (
+          <button
+            onClick={() => {
+              setReaderMode((r) => !r);
+              setIframeKey((k) => k + 1);
+            }}
+            title={readerMode ? "Switch to Site view" : "Switch to Reader view"}
+            className={`grid size-7 place-items-center rounded-md hover:bg-white/10 ${readerMode ? "text-primary" : "text-muted-foreground hover:text-foreground"}`}
+          >
+            {readerMode ? <BookOpen className="size-3.5" /> : <Globe2 className="size-3.5" />}
+          </button>
+        )}
+        {isHttp && (
           <a
             href={current}
             target="_blank"
@@ -298,10 +302,11 @@ export function Browser({ payload }: { payload?: Record<string, unknown> } = {})
               </div>
             )}
           </div>
-        ) : blocked ? (
-          <BlockedFallback url={current} />
         ) : (
-          <IframeView key={`${active.id}-${current}-${iframeKey}`} url={current} />
+          <IframeView
+            key={`${active.id}-${current}-${readerMode}-${iframeKey}`}
+            url={proxyUrl(current, readerMode ? "reader" : "raw")}
+          />
         )}
       </div>
     </div>
@@ -314,31 +319,9 @@ function IframeView({ url }: { url: string }) {
       src={url}
       title="browser"
       className="h-full w-full bg-white"
-      sandbox="allow-forms allow-popups allow-scripts allow-same-origin allow-downloads"
+      sandbox="allow-forms allow-popups allow-scripts allow-same-origin allow-downloads allow-top-navigation-by-user-activation"
       referrerPolicy="no-referrer"
     />
-  );
-}
-
-function BlockedFallback({ url }: { url: string }) {
-  return (
-    <div className="absolute inset-0 grid place-items-center bg-background p-8">
-      <div className="max-w-md text-center">
-        <ShieldAlert className="mx-auto mb-3 size-10 text-amber-400" />
-        <h2 className="mb-2 text-lg font-semibold">This site refused to connect</h2>
-        <p className="mb-4 text-sm text-muted-foreground">
-          {hostnameOf(url)} can't be displayed inside another page. Most major sites (Google, YouTube, X) block embedding for security.
-        </p>
-        <a
-          href={url}
-          target="_blank"
-          rel="noreferrer"
-          className="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90"
-        >
-          <ExternalLink className="size-4" /> Open in new tab
-        </a>
-      </div>
-    </div>
   );
 }
 
@@ -354,3 +337,4 @@ function OfflineFallback({ url }: { url: string }) {
     </div>
   );
 }
+
