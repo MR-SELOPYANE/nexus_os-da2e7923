@@ -33,9 +33,11 @@ export const Route = createFileRoute("/api/chat")({
         const tools = Object.fromEntries(
           Object.entries(TOOLS).map(([name, def]) => [
             name,
-            tool({ description: def.description, inputSchema: def.inputSchema }),
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            tool({ description: def.description, inputSchema: def.inputSchema as any }),
           ]),
         );
+
 
         const result = streamText({
           model: gateway("google/gemini-3-flash-preview"),
