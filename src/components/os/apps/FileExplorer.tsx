@@ -112,12 +112,18 @@ export function FileExplorer() {
             <button
               onClick={(e) => {
                 e.stopPropagation();
-                if (confirm(`Delete ${name}?`)) deleteNode(`${cwd}/${name}`);
+                const permanent = e.shiftKey;
+                const msg = permanent
+                  ? `Permanently delete ${name}? This bypasses the Recycle Bin.`
+                  : `Move ${name} to the Recycle Bin?`;
+                if (confirm(msg)) deleteNode(`${cwd}/${name}`, { permanent });
               }}
+              title="Delete (hold Shift to delete permanently)"
               className="absolute right-1 top-1 hidden rounded p-1 text-muted-foreground hover:bg-destructive hover:text-destructive-foreground group-hover:block"
             >
               <Trash2 className="size-3" />
             </button>
+
           </div>
         ))}
       </div>
