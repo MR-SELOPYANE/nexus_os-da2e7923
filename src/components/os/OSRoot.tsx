@@ -11,7 +11,9 @@ import { NotificationCenter } from "./NotificationCenter";
 import { DesktopContextMenu } from "./DesktopContextMenu";
 import { Widgets } from "./Widgets";
 import { Spotlight } from "./Spotlight";
+import { HudAssistant, HudLauncher } from "./HudAssistant";
 import { WALLPAPERS } from "@/os/wallpapers";
+
 
 export function OSRoot() {
   const loggedIn = useOS((s) => s.loggedIn);
