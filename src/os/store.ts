@@ -25,7 +25,8 @@ export type AppId =
   | "clock"
   | "media"
   | "photos"
-  | "recyclebin";
+  | "recyclebin"
+  | "clipboard";
 
 
 export interface Desktop {
@@ -55,6 +56,15 @@ export interface TrashEntry {
   deletedAt: number;
   node: FSNode;
 }
+
+export interface ClipEntry {
+  id: string;
+  text: string;
+  time: number;
+  source?: string;
+  pinned?: boolean;
+}
+
 
 
 export interface QuickSettings {
@@ -315,6 +325,14 @@ interface OSState {
 
   // screenshots
   captureScreenshot: () => void;
+
+  // clipboard manager
+  clipboard: ClipEntry[];
+  copyToClipboard: (text: string, source?: string) => void;
+  pasteClip: (id: string) => string | null;
+  removeClip: (id: string) => void;
+  pinClip: (id: string) => void;
+  clearClipboard: () => void;
 }
 
 export type SnapZone = "left" | "right" | "top" | "tl" | "tr" | "bl" | "br";
@@ -336,6 +354,7 @@ const APP_TITLES: Record<AppId, string> = {
   media: "Media Player",
   photos: "Photos",
   recyclebin: "Recycle Bin",
+  clipboard: "Clipboard Manager",
 };
 
 const DEFAULT_SIZE: Record<AppId, { w: number; h: number }> = {
@@ -355,6 +374,7 @@ const DEFAULT_SIZE: Record<AppId, { w: number; h: number }> = {
   media: { w: 640, h: 520 },
   photos: { w: 760, h: 540 },
   recyclebin: { w: 680, h: 480 },
+  clipboard: { w: 560, h: 520 },
 };
 
 const SYSTEM_PROCESSES: Omit<Process, "cpu" | "memory">[] = [
@@ -1154,6 +1174,59 @@ export const useOS = create<OSState>()(
           appId: "photos",
         });
       },
+
+      // ----- clipboard manager -----
+      clipboard: [],
+      copyToClipboard: (text, source) => {
+        const trimmed = text?.toString() ?? "";
+        if (!trimmed.trim()) return;
+        set((s) => {
+          const existing = s.clipboard.find((c) => c.text === trimmed);
+          if (existing) {
+            return {
+              clipboard: [
+                { ...existing, time: Date.now(), source: source ?? existing.source },
+                ...s.clipboard.filter((c) => c.id !== existing.id),
+              ],
+            };
+          }
+          const entry: ClipEntry = {
+            id: `clip${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`,
+            text: trimmed,
+            time: Date.now(),
+            source,
+          };
+          const pinned = s.clipboard.filter((c) => c.pinned);
+          const unpinned = s.clipboard.filter((c) => !c.pinned).slice(0, 49);
+          return { clipboard: [entry, ...pinned, ...unpinned] };
+        });
+      },
+      pasteClip: (id) => {
+        const entry = get().clipboard.find((c) => c.id === id);
+        if (!entry) return null;
+        try {
+          navigator.clipboard?.writeText(entry.text).catch(() => {});
+        } catch {
+          /* ignore */
+        }
+        set((s) => ({
+          clipboard: [
+            { ...entry, time: Date.now() },
+            ...s.clipboard.filter((c) => c.id !== id),
+          ],
+        }));
+        return entry.text;
+      },
+      removeClip: (id) =>
+        set((s) => ({ clipboard: s.clipboard.filter((c) => c.id !== id) })),
+      pinClip: (id) =>
+        set((s) => ({
+          clipboard: s.clipboard.map((c) =>
+            c.id === id ? { ...c, pinned: !c.pinned } : c
+          ),
+        })),
+      clearClipboard: () =>
+        set((s) => ({ clipboard: s.clipboard.filter((c) => c.pinned) })),
     }),
     {
       name: "nexus-os-v7",
@@ -1176,6 +1249,7 @@ export const useOS = create<OSState>()(
         activeDesktopId: s.activeDesktopId,
         appVolumes: s.appVolumes,
         trash: s.trash,
+        clipboard: s.clipboard,
 
       }),
     }

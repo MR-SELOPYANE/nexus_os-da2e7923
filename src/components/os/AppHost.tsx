@@ -15,6 +15,9 @@ import { Clock } from "./apps/Clock";
 import { Media } from "./apps/Media";
 import { Photos } from "./apps/Photos";
 import { RecycleBin } from "./apps/RecycleBin";
+import { ClipboardManager } from "./apps/ClipboardManager";
+
+
 
 
 export function AppHost({ win }: { win: WindowState }) {
@@ -51,6 +54,9 @@ export function AppHost({ win }: { win: WindowState }) {
       return <Photos />;
     case "recyclebin":
       return <RecycleBin />;
+    case "clipboard":
+      return <ClipboardManager />;
+
 
     default:
       return null;
