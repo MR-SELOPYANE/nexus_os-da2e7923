@@ -157,19 +157,17 @@ function newTab(url = "nexus://home"): Tab {
   return { id: Math.random().toString(36).slice(2), stack: [url], idx: 0, title: AURORA_SITES[url]?.title ?? "New Tab" };
 }
 
-// Domains known to block iframe embedding (X-Frame-Options / frame-ancestors).
-// Match these immediately and show the BlockedFallback instead of an iframe.
-const BLOCKED_HOSTS = [
-  "google.", "youtube.", "youtu.be", "twitter.", "x.com", "facebook.",
-  "instagram.", "linkedin.", "reddit.", "tiktok.", "amazon.", "netflix.",
-  "spotify.", "discord.com", "twitch.tv", "openai.com", "chatgpt.com",
-  "apple.com", "microsoft.com", "bing.com", "yahoo.com", "pinterest.",
-];
+export function Browser({ payload }: { payload?: Record<string, unknown> } = {}) {
+  const initial = (payload?.url as string) ?? "nexus://home";
+  const online = useOS((s) => s.network.online);
+  const [tabs, setTabs] = useState<Tab[]>([newTab(initial)]);
+  const [activeId, setActiveId] = useState(tabs[0].id);
+  const [readerMode, setReaderMode] = useState(false);
+  const active = tabs.find((t) => t.id === activeId) ?? tabs[0];
+  const current = active.stack[active.idx];
+  const [bar, setBar] = useState(current);
+  const [iframeKey, setIframeKey] = useState(0);
 
-function isLikelyBlocked(url: string): boolean {
-  const host = hostnameOf(url).toLowerCase();
-  return BLOCKED_HOSTS.some((b) => host.includes(b));
-}
 
 export function Browser({ payload }: { payload?: Record<string, unknown> } = {}) {
   const initial = (payload?.url as string) ?? "nexus://home";
