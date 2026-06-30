@@ -16,6 +16,9 @@ import {
   Image as ImageIcon,
   Trash2,
   Clipboard as ClipboardIcon,
+  Accessibility as A11yIcon,
+  Video,
+  Store,
   type LucideIcon,
 } from "lucide-react";
 import type { AppId } from "./store";
