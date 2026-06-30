@@ -26,7 +26,10 @@ export type AppId =
   | "media"
   | "photos"
   | "recyclebin"
-  | "clipboard";
+  | "clipboard"
+  | "accessibility"
+  | "recorder"
+  | "appstore";
 
 
 export interface Desktop {
@@ -63,6 +66,20 @@ export interface ClipEntry {
   time: number;
   source?: string;
   pinned?: boolean;
+}
+
+export type ColorBlindMode = "none" | "protanopia" | "deuteranopia" | "tritanopia" | "achromatopsia";
+
+export interface AccessibilityState {
+  highContrast: boolean;
+  colorBlind: ColorBlindMode;
+  magnifier: boolean;
+  magnifierZoom: number; // 1.5 - 4
+  largeCursor: boolean;
+  stickyKeys: boolean;
+  perfHud: boolean;
+  ttsRate: number; // 0.5 - 2
+  onScreenKeyboard: boolean;
 }
 
 
@@ -333,6 +350,10 @@ interface OSState {
   removeClip: (id: string) => void;
   pinClip: (id: string) => void;
   clearClipboard: () => void;
+
+  // accessibility
+  accessibility: AccessibilityState;
+  setAccessibility: (patch: Partial<AccessibilityState>) => void;
 }
 
 export type SnapZone = "left" | "right" | "top" | "tl" | "tr" | "bl" | "br";
@@ -355,6 +376,9 @@ const APP_TITLES: Record<AppId, string> = {
   photos: "Photos",
   recyclebin: "Recycle Bin",
   clipboard: "Clipboard Manager",
+  accessibility: "Accessibility",
+  recorder: "Screen Recorder",
+  appstore: "App Store",
 };
 
 const DEFAULT_SIZE: Record<AppId, { w: number; h: number }> = {
@@ -375,6 +399,9 @@ const DEFAULT_SIZE: Record<AppId, { w: number; h: number }> = {
   photos: { w: 760, h: 540 },
   recyclebin: { w: 680, h: 480 },
   clipboard: { w: 560, h: 520 },
+  accessibility: { w: 640, h: 580 },
+  recorder: { w: 540, h: 460 },
+  appstore: { w: 820, h: 600 },
 };
 
 const SYSTEM_PROCESSES: Omit<Process, "cpu" | "memory">[] = [
@@ -1227,6 +1254,21 @@ export const useOS = create<OSState>()(
         })),
       clearClipboard: () =>
         set((s) => ({ clipboard: s.clipboard.filter((c) => c.pinned) })),
+
+      // ----- accessibility -----
+      accessibility: {
+        highContrast: false,
+        colorBlind: "none",
+        magnifier: false,
+        magnifierZoom: 2,
+        largeCursor: false,
+        stickyKeys: false,
+        perfHud: false,
+        ttsRate: 1,
+        onScreenKeyboard: false,
+      },
+      setAccessibility: (patch) =>
+        set((s) => ({ accessibility: { ...s.accessibility, ...patch } })),
     }),
     {
       name: "nexus-os-v7",
@@ -1250,6 +1292,7 @@ export const useOS = create<OSState>()(
         appVolumes: s.appVolumes,
         trash: s.trash,
         clipboard: s.clipboard,
+        accessibility: s.accessibility,
 
       }),
     }

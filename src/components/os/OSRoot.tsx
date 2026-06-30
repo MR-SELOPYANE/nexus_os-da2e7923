@@ -12,8 +12,15 @@ import { DesktopContextMenu } from "./DesktopContextMenu";
 import { Widgets } from "./Widgets";
 import { Spotlight } from "./Spotlight";
 import { HudAssistant, HudLauncher } from "./HudAssistant";
+import { AccessibilityOverlays, OnScreenKeyboard } from "./AccessibilityOverlays";
+import { PerfHUD } from "./PerfHUD";
 import { WALLPAPERS } from "@/os/wallpapers";
 
+
+function PerfHudGate() {
+  const on = useOS((s) => s.accessibility.perfHud);
+  return on ? <PerfHUD /> : null;
+}
 
 export function OSRoot() {
   const loggedIn = useOS((s) => s.loggedIn);
@@ -242,6 +249,14 @@ export function OSRoot() {
       {hudOpen && <HudAssistant onClose={() => setHudOpen(false)} />}
 
       {menu && <DesktopContextMenu x={menu.x} y={menu.y} onClose={() => setMenu(null)} />}
+
+      <AccessibilityOverlays />
+      <OnScreenKeyboard />
+      <PerfHudGate />
+
+
+
+
 
 
       {/* Brightness overlay */}
