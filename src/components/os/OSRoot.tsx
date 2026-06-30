@@ -245,6 +245,12 @@ export function OSRoot() {
 
       {menu && <DesktopContextMenu x={menu.x} y={menu.y} onClose={() => setMenu(null)} />}
 
+      <AccessibilityOverlays />
+      <OnScreenKeyboard />
+      {useOS.getState().accessibility.perfHud && <PerfHUD />}
+
+
+
 
       {/* Brightness overlay */}
       {quick.brightness < 100 && (
