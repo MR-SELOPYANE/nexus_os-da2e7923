@@ -40,6 +40,7 @@ export const APPS: AppMeta[] = [
   { id: "photos", name: "Photos", icon: ImageIcon, tile: "from-rose-400 to-amber-500", showOnDesktop: true },
   { id: "assistant", name: "Assistant", icon: Sparkles, tile: "from-fuchsia-400 to-purple-600", showOnDesktop: true },
   { id: "recyclebin", name: "Recycle Bin", icon: Trash2, tile: "from-slate-500 to-zinc-700", showOnDesktop: true },
+  { id: "clipboard", name: "Clipboard", icon: ClipboardIcon, tile: "from-teal-400 to-emerald-600", showOnDesktop: true },
   { id: "clock", name: "Clock", icon: CalendarDays, tile: "from-pink-400 to-rose-600" },
   { id: "network", name: "Network", icon: Wifi, tile: "from-sky-400 to-cyan-600" },
   { id: "update", name: "Update Manager", icon: DownloadCloud, tile: "from-blue-400 to-indigo-600" },
