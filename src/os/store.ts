@@ -337,6 +337,7 @@ const APP_TITLES: Record<AppId, string> = {
   media: "Media Player",
   photos: "Photos",
   recyclebin: "Recycle Bin",
+  clipboard: "Clipboard Manager",
 };
 
 const DEFAULT_SIZE: Record<AppId, { w: number; h: number }> = {
