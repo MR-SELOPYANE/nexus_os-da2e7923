@@ -11,7 +11,9 @@ import { NotificationCenter } from "./NotificationCenter";
 import { DesktopContextMenu } from "./DesktopContextMenu";
 import { Widgets } from "./Widgets";
 import { Spotlight } from "./Spotlight";
+import { HudAssistant, HudLauncher } from "./HudAssistant";
 import { WALLPAPERS } from "@/os/wallpapers";
+
 
 export function OSRoot() {
   const loggedIn = useOS((s) => s.loggedIn);
@@ -32,6 +34,8 @@ export function OSRoot() {
   const [notifOpen, setNotifOpen] = useState(false);
   const [menu, setMenu] = useState<{ x: number; y: number } | null>(null);
   const [spotlightOpen, setSpotlightOpen] = useState(false);
+  const [hudOpen, setHudOpen] = useState(false);
+
   const lastNotifId = useRef<string | null>(null);
 
   useEffect(() => setHydrated(true), []);
@@ -101,6 +105,13 @@ export function OSRoot() {
         setSpotlightOpen((v) => !v);
         return;
       }
+      // Summon Nexus HUD: Ctrl+Shift+J
+      if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === "j") {
+        e.preventDefault();
+        setHudOpen((v) => !v);
+        return;
+      }
+
       if (e.ctrlKey && e.shiftKey && e.key === "Escape") {
         e.preventDefault();
         openApp("taskmanager");
@@ -190,7 +201,11 @@ export function OSRoot() {
       <Taskbar onToggleNotifications={() => setNotifOpen((v) => !v)} />
       <Spotlight open={spotlightOpen} onClose={() => setSpotlightOpen(false)} />
 
+      <HudLauncher onClick={() => setHudOpen((v) => !v)} active={hudOpen} />
+      {hudOpen && <HudAssistant onClose={() => setHudOpen(false)} />}
+
       {menu && <DesktopContextMenu x={menu.x} y={menu.y} onClose={() => setMenu(null)} />}
+
 
       {/* Brightness overlay */}
       {quick.brightness < 100 && (
