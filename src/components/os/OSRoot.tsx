@@ -247,7 +247,9 @@ export function OSRoot() {
 
       <AccessibilityOverlays />
       <OnScreenKeyboard />
-      {useOS.getState().accessibility.perfHud && <PerfHUD />}
+      <PerfHudGate />
+
+
 
 
 
