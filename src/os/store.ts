@@ -319,6 +319,7 @@ const APP_TITLES: Record<AppId, string> = {
   clock: "Clock & Calendar",
   media: "Media Player",
   photos: "Photos",
+  recyclebin: "Recycle Bin",
 };
 
 const DEFAULT_SIZE: Record<AppId, { w: number; h: number }> = {
