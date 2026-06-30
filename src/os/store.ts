@@ -358,6 +358,9 @@ const APP_TITLES: Record<AppId, string> = {
   photos: "Photos",
   recyclebin: "Recycle Bin",
   clipboard: "Clipboard Manager",
+  accessibility: "Accessibility",
+  recorder: "Screen Recorder",
+  appstore: "App Store",
 };
 
 const DEFAULT_SIZE: Record<AppId, { w: number; h: number }> = {
