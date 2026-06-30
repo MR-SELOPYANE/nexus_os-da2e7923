@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { ArrowLeft, ArrowRight, RotateCw, Lock, Search, Home, Plus, X, ExternalLink, ShieldAlert } from "lucide-react";
+import { ArrowLeft, ArrowRight, RotateCw, Lock, Search, Home, Plus, X, ExternalLink, BookOpen, Globe2 } from "lucide-react";
+
 import { useOS } from "@/os/store";
 
 interface Site {
