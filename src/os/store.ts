@@ -68,6 +68,20 @@ export interface ClipEntry {
   pinned?: boolean;
 }
 
+export type ColorBlindMode = "none" | "protanopia" | "deuteranopia" | "tritanopia" | "achromatopsia";
+
+export interface AccessibilityState {
+  highContrast: boolean;
+  colorBlind: ColorBlindMode;
+  magnifier: boolean;
+  magnifierZoom: number; // 1.5 - 4
+  largeCursor: boolean;
+  stickyKeys: boolean;
+  perfHud: boolean;
+  ttsRate: number; // 0.5 - 2
+  onScreenKeyboard: boolean;
+}
+
 
 
 export interface QuickSettings {
