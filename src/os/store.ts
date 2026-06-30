@@ -48,6 +48,15 @@ export interface Alarm {
   enabled: boolean;
 }
 
+export interface TrashEntry {
+  id: string;
+  name: string;
+  originalPath: string;
+  deletedAt: number;
+  node: FSNode;
+}
+
+
 export interface QuickSettings {
   doNotDisturb: boolean;
   nightLight: boolean;
