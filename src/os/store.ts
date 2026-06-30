@@ -316,6 +316,14 @@ interface OSState {
 
   // screenshots
   captureScreenshot: () => void;
+
+  // clipboard manager
+  clipboard: ClipEntry[];
+  copyToClipboard: (text: string, source?: string) => void;
+  pasteClip: (id: string) => string | null;
+  removeClip: (id: string) => void;
+  pinClip: (id: string) => void;
+  clearClipboard: () => void;
 }
 
 export type SnapZone = "left" | "right" | "top" | "tl" | "tr" | "bl" | "br";
