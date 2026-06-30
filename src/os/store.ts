@@ -1175,6 +1175,8 @@ export const useOS = create<OSState>()(
         desktops: s.desktops,
         activeDesktopId: s.activeDesktopId,
         appVolumes: s.appVolumes,
+        trash: s.trash,
+
       }),
     }
   )
