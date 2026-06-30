@@ -350,6 +350,10 @@ interface OSState {
   removeClip: (id: string) => void;
   pinClip: (id: string) => void;
   clearClipboard: () => void;
+
+  // accessibility
+  accessibility: AccessibilityState;
+  setAccessibility: (patch: Partial<AccessibilityState>) => void;
 }
 
 export type SnapZone = "left" | "right" | "top" | "tl" | "tr" | "bl" | "br";
