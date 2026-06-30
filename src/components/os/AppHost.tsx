@@ -16,6 +16,11 @@ import { Media } from "./apps/Media";
 import { Photos } from "./apps/Photos";
 import { RecycleBin } from "./apps/RecycleBin";
 import { ClipboardManager } from "./apps/ClipboardManager";
+import { Accessibility } from "./apps/Accessibility";
+import { ScreenRecorder } from "./apps/ScreenRecorder";
+import { AppStore } from "./apps/AppStore";
+
+
 
 
 
