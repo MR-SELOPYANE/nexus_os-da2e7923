@@ -17,6 +17,11 @@ import { PerfHUD } from "./PerfHUD";
 import { WALLPAPERS } from "@/os/wallpapers";
 
 
+function PerfHudGate() {
+  const on = useOS((s) => s.accessibility.perfHud);
+  return on ? <PerfHUD /> : null;
+}
+
 export function OSRoot() {
   const loggedIn = useOS((s) => s.loggedIn);
   const locked = useOS((s) => s.locked);
