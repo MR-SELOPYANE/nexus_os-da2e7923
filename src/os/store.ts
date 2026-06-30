@@ -26,7 +26,10 @@ export type AppId =
   | "media"
   | "photos"
   | "recyclebin"
-  | "clipboard";
+  | "clipboard"
+  | "accessibility"
+  | "recorder"
+  | "appstore";
 
 
 export interface Desktop {
