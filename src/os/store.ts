@@ -57,6 +57,15 @@ export interface TrashEntry {
   node: FSNode;
 }
 
+export interface ClipEntry {
+  id: string;
+  text: string;
+  time: number;
+  source?: string;
+  pinned?: boolean;
+}
+
+
 
 export interface QuickSettings {
   doNotDisturb: boolean;
