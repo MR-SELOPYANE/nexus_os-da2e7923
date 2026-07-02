@@ -1024,7 +1024,16 @@ export const useOS = create<OSState>()(
       // ----- quick settings -----
       quick: { ...DEFAULT_QUICK },
 
-      setQuick: (patch) => set((s) => ({ quick: { ...s.quick, ...patch } })),
+      setQuick: (patch) =>
+        set((s) => {
+          const next = { ...s.quick, ...patch };
+          // Focus/Gaming mode implies Do Not Disturb
+          if (patch.focusMode !== undefined) {
+            next.doNotDisturb = patch.focusMode !== "off" ? true : s.quick.doNotDisturb;
+          }
+          return { quick: next };
+        }),
+
 
       // ----- calendar -----
       events: [],
