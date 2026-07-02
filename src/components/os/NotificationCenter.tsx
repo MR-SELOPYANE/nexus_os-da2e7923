@@ -134,29 +134,35 @@ export function NotificationCenter({ open, onClose }: { open: boolean; onClose: 
         )}
       </div>
 
+      {/* Focus / Gaming mode */}
+      <FocusModeCard />
 
-      {/* Widgets toggle */}
-      <button
-        onClick={() => setQuick({ widgetsVisible: !quick.widgetsVisible })}
-        className="mb-3 flex w-full items-center justify-between rounded-xl border border-glass-border bg-white/5 px-3 py-2 text-sm hover:bg-white/8"
-      >
-        <span className="flex items-center gap-2">
-          <LayoutDashboard className="size-4 text-muted-foreground" /> Desktop widgets
-        </span>
-        <span
-          className={cn(
-            "h-5 w-9 rounded-full p-0.5 transition-colors",
-            quick.widgetsVisible ? "bg-primary" : "bg-white/15"
-          )}
+      {/* Widgets toggle + picker */}
+      <div className="mb-3 rounded-xl border border-glass-border bg-white/5">
+        <button
+          onClick={() => setQuick({ widgetsVisible: !quick.widgetsVisible })}
+          className="flex w-full items-center justify-between px-3 py-2 text-sm hover:bg-white/8"
         >
+          <span className="flex items-center gap-2">
+            <LayoutDashboard className="size-4 text-muted-foreground" /> Desktop widgets
+          </span>
           <span
             className={cn(
-              "block size-4 rounded-full bg-white transition-transform",
-              quick.widgetsVisible ? "translate-x-4" : "translate-x-0"
+              "h-5 w-9 rounded-full p-0.5 transition-colors",
+              quick.widgetsVisible ? "bg-primary" : "bg-white/15"
             )}
-          />
-        </span>
-      </button>
+          >
+            <span
+              className={cn(
+                "block size-4 rounded-full bg-white transition-transform",
+                quick.widgetsVisible ? "translate-x-4" : "translate-x-0"
+              )}
+            />
+          </span>
+        </button>
+        {quick.widgetsVisible && <WidgetPicker />}
+      </div>
+
 
       {/* Notifications */}
       <div className="mb-2 flex items-center justify-between px-1">
