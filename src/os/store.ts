@@ -867,16 +867,10 @@ export const useOS = create<OSState>()(
             ? s.packages
             : [{ name: "nexus-core", version: "1.0.0" }],
           settings: {
-            accent: "0.72 0.13 195",
-            wallpaperDim: 20,
+            ...DEFAULT_SETTINGS,
             username: keepFiles ? s.settings.username : "guest",
-            reduceTransparency: false,
-            wallpaperId: "dusk",
-            clock24h: false,
-            largeText: false,
-            animationsEnabled: true,
-            taskbarPosition: "bottom",
           },
+
           restorePoints: keepFiles ? s.restorePoints : [],
         })),
 
