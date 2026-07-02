@@ -1286,6 +1286,27 @@ export const useOS = create<OSState>()(
     }),
     {
       name: "nexus-os-v7",
+      version: 2,
+      migrate: (persisted: unknown, _version: number) => {
+        const p = (persisted as { settings?: Partial<Settings>; quick?: Partial<QuickSettings> } | null) ?? {};
+        const s = p.settings ?? {};
+        const q = p.quick ?? {};
+        return {
+          ...(persisted as object),
+          settings: {
+            ...DEFAULT_SETTINGS,
+            ...s,
+            pinnedApps: s.pinnedApps ?? DEFAULT_SETTINGS.pinnedApps,
+            enabledWidgets: s.enabledWidgets ?? DEFAULT_SETTINGS.enabledWidgets,
+            stickyNote: s.stickyNote ?? "",
+          },
+          quick: {
+            ...DEFAULT_QUICK,
+            ...q,
+            focusMode: q.focusMode ?? "off",
+          },
+        };
+      },
       partialize: (s) => ({
         fs: s.fs,
         settings: s.settings,
@@ -1307,9 +1328,9 @@ export const useOS = create<OSState>()(
         trash: s.trash,
         clipboard: s.clipboard,
         accessibility: s.accessibility,
-
       }),
     }
+
   )
 );
 
