@@ -1022,13 +1022,8 @@ export const useOS = create<OSState>()(
         set((s) => ({ restorePoints: s.restorePoints.filter((p) => p.id !== id) })),
 
       // ----- quick settings -----
-      quick: {
-        doNotDisturb: false,
-        nightLight: false,
-        brightness: 100,
-        volume: 70,
-        widgetsVisible: true,
-      },
+      quick: { ...DEFAULT_QUICK },
+
       setQuick: (patch) => set((s) => ({ quick: { ...s.quick, ...patch } })),
 
       // ----- calendar -----
