@@ -156,7 +156,11 @@ export interface Settings {
   largeText: boolean;
   animationsEnabled: boolean;
   taskbarPosition: "bottom" | "top";
+  pinnedApps: AppId[];
+  enabledWidgets: WidgetId[];
+  stickyNote: string;
 }
+
 
 export interface WifiNetwork {
   ssid: string;
