@@ -284,3 +284,74 @@ function Slider({
     </div>
   );
 }
+
+function FocusModeCard() {
+  const focusMode = useOS((s) => s.quick.focusMode);
+  const setQuick = useOS((s) => s.setQuick);
+  const modes: { id: "off" | "focus" | "gaming"; label: string; icon: typeof Focus; hint: string }[] = [
+    { id: "off", label: "Off", icon: Circle, hint: "Everything on" },
+    { id: "focus", label: "Focus", icon: Focus, hint: "Hide widgets, mute pings" },
+    { id: "gaming", label: "Gaming", icon: Gamepad2, hint: "Silence & smooth perf" },
+  ];
+  return (
+    <div className="mb-3 rounded-xl border border-glass-border bg-white/5 p-2">
+      <p className="mb-1.5 px-1 text-[11px] uppercase tracking-wider text-muted-foreground">Focus mode</p>
+      <div className="grid grid-cols-3 gap-1.5">
+        {modes.map((m) => {
+          const Icon = m.icon;
+          const active = focusMode === m.id;
+          return (
+            <button
+              key={m.id}
+              onClick={() => setQuick({ focusMode: m.id })}
+              title={m.hint}
+              className={cn(
+                "flex flex-col items-center gap-1 rounded-lg border px-2 py-2 text-[10px] font-medium transition-colors",
+                active
+                  ? "border-primary/40 bg-primary/15 text-primary"
+                  : "border-glass-border bg-white/5 text-muted-foreground hover:bg-white/10"
+              )}
+            >
+              <Icon className="size-4" />
+              <span>{m.label}</span>
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function WidgetPicker() {
+  const enabled = useOS((s) => s.settings.enabledWidgets);
+  const updateSettings = useOS((s) => s.updateSettings);
+  const items: WidgetId[] = ["clock", "weather", "system", "events", "note"];
+  const toggle = (id: WidgetId) =>
+    updateSettings({
+      enabledWidgets: enabled.includes(id)
+        ? enabled.filter((x) => x !== id)
+        : [...enabled, id],
+    });
+  return (
+    <div className="flex flex-wrap gap-1 border-t border-glass-border px-3 py-2">
+      {items.map((id) => {
+        const on = enabled.includes(id);
+        return (
+          <button
+            key={id}
+            onClick={() => toggle(id)}
+            className={cn(
+              "rounded-full border px-2 py-0.5 text-[11px] transition-colors",
+              on
+                ? "border-primary/40 bg-primary/15 text-primary"
+                : "border-glass-border bg-white/5 text-muted-foreground hover:bg-white/10"
+            )}
+          >
+            {WIDGET_LABELS[id]}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
