@@ -1,8 +1,17 @@
-import { X, Bell, Trash2, Wifi, Plane, BellOff, Moon, Sun, Volume2, LayoutDashboard, Sliders } from "lucide-react";
-import { useOS, type AppId } from "@/os/store";
+import { X, Bell, Trash2, Wifi, Plane, BellOff, Moon, Sun, Volume2, LayoutDashboard, Sliders, Focus, Gamepad2, Circle } from "lucide-react";
+import { useOS, type AppId, type WidgetId } from "@/os/store";
 import { APP_MAP } from "@/os/apps";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
+
+const WIDGET_LABELS: Record<WidgetId, string> = {
+  clock: "Clock",
+  weather: "Weather",
+  system: "System",
+  events: "Events",
+  note: "Quick note",
+};
+
 
 export function NotificationCenter({ open, onClose }: { open: boolean; onClose: () => void }) {
   const notifications = useOS((s) => s.notifications);
