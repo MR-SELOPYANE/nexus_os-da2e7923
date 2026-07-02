@@ -84,13 +84,19 @@ export interface AccessibilityState {
 
 
 
+export type FocusMode = "off" | "focus" | "gaming";
+
 export interface QuickSettings {
   doNotDisturb: boolean;
   nightLight: boolean;
   brightness: number; // 30-100
   volume: number; // 0-100
   widgetsVisible: boolean;
+  focusMode: FocusMode;
 }
+
+export type WidgetId = "clock" | "weather" | "system" | "events" | "note";
+
 
 export interface WindowState {
   id: string;
