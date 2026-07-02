@@ -852,17 +852,8 @@ export const useOS = create<OSState>()(
         get().log("INFO", `pkg uninstall ${name}`);
       },
 
-      settings: {
-        accent: "0.72 0.13 195",
-        wallpaperDim: 20,
-        username: "guest",
-        reduceTransparency: false,
-        wallpaperId: "dusk",
-        clock24h: false,
-        largeText: false,
-        animationsEnabled: true,
-        taskbarPosition: "bottom",
-      },
+      settings: { ...DEFAULT_SETTINGS },
+
       updateSettings: (patch) => set((s) => ({ settings: { ...s.settings, ...patch } })),
 
       resetSystem: (keepFiles = false) =>
