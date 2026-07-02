@@ -14,6 +14,7 @@ import { Spotlight } from "./Spotlight";
 import { HudAssistant, HudLauncher } from "./HudAssistant";
 import { AccessibilityOverlays, OnScreenKeyboard } from "./AccessibilityOverlays";
 import { PerfHUD } from "./PerfHUD";
+import { FocusModeBanner } from "./FocusModeBanner";
 import { WALLPAPERS } from "@/os/wallpapers";
 
 
