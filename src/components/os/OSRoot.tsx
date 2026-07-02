@@ -14,6 +14,7 @@ import { Spotlight } from "./Spotlight";
 import { HudAssistant, HudLauncher } from "./HudAssistant";
 import { AccessibilityOverlays, OnScreenKeyboard } from "./AccessibilityOverlays";
 import { PerfHUD } from "./PerfHUD";
+import { FocusModeBanner } from "./FocusModeBanner";
 import { WALLPAPERS } from "@/os/wallpapers";
 
 
@@ -65,8 +66,12 @@ export function OSRoot() {
     root.style.setProperty("--accent", `oklch(${settings.accent})`);
     root.style.setProperty("--ring", `oklch(${settings.accent})`);
     root.style.fontSize = settings.largeText ? "18px" : "";
-    root.dataset.animations = settings.animationsEnabled ? "on" : "off";
-  }, [settings.accent, settings.largeText, settings.animationsEnabled]);
+    // Gaming mode also implies animations off for perf.
+    const animOn = settings.animationsEnabled && quick.focusMode !== "gaming";
+    root.dataset.animations = animOn ? "on" : "off";
+    root.dataset.focusMode = quick.focusMode;
+  }, [settings.accent, settings.largeText, settings.animationsEnabled, quick.focusMode]);
+
 
   useEffect(() => {
     if (loggedIn) {
@@ -253,6 +258,8 @@ export function OSRoot() {
       <AccessibilityOverlays />
       <OnScreenKeyboard />
       <PerfHudGate />
+      <FocusModeBanner />
+
 
 
 

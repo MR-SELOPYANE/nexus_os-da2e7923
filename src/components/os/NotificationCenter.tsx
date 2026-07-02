@@ -1,8 +1,17 @@
-import { X, Bell, Trash2, Wifi, Plane, BellOff, Moon, Sun, Volume2, LayoutDashboard, Sliders } from "lucide-react";
-import { useOS, type AppId } from "@/os/store";
+import { X, Bell, Trash2, Wifi, Plane, BellOff, Moon, Sun, Volume2, LayoutDashboard, Sliders, Focus, Gamepad2, Circle } from "lucide-react";
+import { useOS, type AppId, type WidgetId } from "@/os/store";
 import { APP_MAP } from "@/os/apps";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
+
+const WIDGET_LABELS: Record<WidgetId, string> = {
+  clock: "Clock",
+  weather: "Weather",
+  system: "System",
+  events: "Events",
+  note: "Quick note",
+};
+
 
 export function NotificationCenter({ open, onClose }: { open: boolean; onClose: () => void }) {
   const notifications = useOS((s) => s.notifications);
@@ -125,29 +134,35 @@ export function NotificationCenter({ open, onClose }: { open: boolean; onClose: 
         )}
       </div>
 
+      {/* Focus / Gaming mode */}
+      <FocusModeCard />
 
-      {/* Widgets toggle */}
-      <button
-        onClick={() => setQuick({ widgetsVisible: !quick.widgetsVisible })}
-        className="mb-3 flex w-full items-center justify-between rounded-xl border border-glass-border bg-white/5 px-3 py-2 text-sm hover:bg-white/8"
-      >
-        <span className="flex items-center gap-2">
-          <LayoutDashboard className="size-4 text-muted-foreground" /> Desktop widgets
-        </span>
-        <span
-          className={cn(
-            "h-5 w-9 rounded-full p-0.5 transition-colors",
-            quick.widgetsVisible ? "bg-primary" : "bg-white/15"
-          )}
+      {/* Widgets toggle + picker */}
+      <div className="mb-3 rounded-xl border border-glass-border bg-white/5">
+        <button
+          onClick={() => setQuick({ widgetsVisible: !quick.widgetsVisible })}
+          className="flex w-full items-center justify-between px-3 py-2 text-sm hover:bg-white/8"
         >
+          <span className="flex items-center gap-2">
+            <LayoutDashboard className="size-4 text-muted-foreground" /> Desktop widgets
+          </span>
           <span
             className={cn(
-              "block size-4 rounded-full bg-white transition-transform",
-              quick.widgetsVisible ? "translate-x-4" : "translate-x-0"
+              "h-5 w-9 rounded-full p-0.5 transition-colors",
+              quick.widgetsVisible ? "bg-primary" : "bg-white/15"
             )}
-          />
-        </span>
-      </button>
+          >
+            <span
+              className={cn(
+                "block size-4 rounded-full bg-white transition-transform",
+                quick.widgetsVisible ? "translate-x-4" : "translate-x-0"
+              )}
+            />
+          </span>
+        </button>
+        {quick.widgetsVisible && <WidgetPicker />}
+      </div>
+
 
       {/* Notifications */}
       <div className="mb-2 flex items-center justify-between px-1">
@@ -269,3 +284,74 @@ function Slider({
     </div>
   );
 }
+
+function FocusModeCard() {
+  const focusMode = useOS((s) => s.quick.focusMode);
+  const setQuick = useOS((s) => s.setQuick);
+  const modes: { id: "off" | "focus" | "gaming"; label: string; icon: typeof Focus; hint: string }[] = [
+    { id: "off", label: "Off", icon: Circle, hint: "Everything on" },
+    { id: "focus", label: "Focus", icon: Focus, hint: "Hide widgets, mute pings" },
+    { id: "gaming", label: "Gaming", icon: Gamepad2, hint: "Silence & smooth perf" },
+  ];
+  return (
+    <div className="mb-3 rounded-xl border border-glass-border bg-white/5 p-2">
+      <p className="mb-1.5 px-1 text-[11px] uppercase tracking-wider text-muted-foreground">Focus mode</p>
+      <div className="grid grid-cols-3 gap-1.5">
+        {modes.map((m) => {
+          const Icon = m.icon;
+          const active = focusMode === m.id;
+          return (
+            <button
+              key={m.id}
+              onClick={() => setQuick({ focusMode: m.id })}
+              title={m.hint}
+              className={cn(
+                "flex flex-col items-center gap-1 rounded-lg border px-2 py-2 text-[10px] font-medium transition-colors",
+                active
+                  ? "border-primary/40 bg-primary/15 text-primary"
+                  : "border-glass-border bg-white/5 text-muted-foreground hover:bg-white/10"
+              )}
+            >
+              <Icon className="size-4" />
+              <span>{m.label}</span>
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function WidgetPicker() {
+  const enabled = useOS((s) => s.settings.enabledWidgets);
+  const updateSettings = useOS((s) => s.updateSettings);
+  const items: WidgetId[] = ["clock", "weather", "system", "events", "note"];
+  const toggle = (id: WidgetId) =>
+    updateSettings({
+      enabledWidgets: enabled.includes(id)
+        ? enabled.filter((x) => x !== id)
+        : [...enabled, id],
+    });
+  return (
+    <div className="flex flex-wrap gap-1 border-t border-glass-border px-3 py-2">
+      {items.map((id) => {
+        const on = enabled.includes(id);
+        return (
+          <button
+            key={id}
+            onClick={() => toggle(id)}
+            className={cn(
+              "rounded-full border px-2 py-0.5 text-[11px] transition-colors",
+              on
+                ? "border-primary/40 bg-primary/15 text-primary"
+                : "border-glass-border bg-white/5 text-muted-foreground hover:bg-white/10"
+            )}
+          >
+            {WIDGET_LABELS[id]}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+

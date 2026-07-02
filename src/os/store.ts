@@ -84,13 +84,19 @@ export interface AccessibilityState {
 
 
 
+export type FocusMode = "off" | "focus" | "gaming";
+
 export interface QuickSettings {
   doNotDisturb: boolean;
   nightLight: boolean;
   brightness: number; // 30-100
   volume: number; // 0-100
   widgetsVisible: boolean;
+  focusMode: FocusMode;
 }
+
+export type WidgetId = "clock" | "weather" | "system" | "events" | "note";
+
 
 export interface WindowState {
   id: string;
@@ -150,7 +156,11 @@ export interface Settings {
   largeText: boolean;
   animationsEnabled: boolean;
   taskbarPosition: "bottom" | "top";
+  pinnedApps: AppId[];
+  enabledWidgets: WidgetId[];
+  stickyNote: string;
 }
+
 
 export interface WifiNetwork {
   ssid: string;
@@ -403,6 +413,36 @@ const DEFAULT_SIZE: Record<AppId, { w: number; h: number }> = {
   recorder: { w: 540, h: 460 },
   appstore: { w: 820, h: 600 },
 };
+
+const DEFAULT_PINNED: AppId[] = [
+  "files", "browser", "assistant", "notes", "terminal", "media", "photos", "settings",
+];
+const DEFAULT_WIDGETS: WidgetId[] = ["clock", "weather", "system", "events"];
+
+const DEFAULT_SETTINGS: Settings = {
+  accent: "0.72 0.13 195",
+  wallpaperDim: 20,
+  username: "guest",
+  reduceTransparency: false,
+  wallpaperId: "dusk",
+  clock24h: false,
+  largeText: false,
+  animationsEnabled: true,
+  taskbarPosition: "bottom",
+  pinnedApps: DEFAULT_PINNED,
+  enabledWidgets: DEFAULT_WIDGETS,
+  stickyNote: "",
+};
+
+const DEFAULT_QUICK: QuickSettings = {
+  doNotDisturb: false,
+  nightLight: false,
+  brightness: 100,
+  volume: 70,
+  widgetsVisible: true,
+  focusMode: "off",
+};
+
 
 const SYSTEM_PROCESSES: Omit<Process, "cpu" | "memory">[] = [
   { pid: 1, name: "nexus-kernel", status: "running", system: true },
@@ -812,17 +852,8 @@ export const useOS = create<OSState>()(
         get().log("INFO", `pkg uninstall ${name}`);
       },
 
-      settings: {
-        accent: "0.72 0.13 195",
-        wallpaperDim: 20,
-        username: "guest",
-        reduceTransparency: false,
-        wallpaperId: "dusk",
-        clock24h: false,
-        largeText: false,
-        animationsEnabled: true,
-        taskbarPosition: "bottom",
-      },
+      settings: { ...DEFAULT_SETTINGS },
+
       updateSettings: (patch) => set((s) => ({ settings: { ...s.settings, ...patch } })),
 
       resetSystem: (keepFiles = false) =>
@@ -836,16 +867,10 @@ export const useOS = create<OSState>()(
             ? s.packages
             : [{ name: "nexus-core", version: "1.0.0" }],
           settings: {
-            accent: "0.72 0.13 195",
-            wallpaperDim: 20,
+            ...DEFAULT_SETTINGS,
             username: keepFiles ? s.settings.username : "guest",
-            reduceTransparency: false,
-            wallpaperId: "dusk",
-            clock24h: false,
-            largeText: false,
-            animationsEnabled: true,
-            taskbarPosition: "bottom",
           },
+
           restorePoints: keepFiles ? s.restorePoints : [],
         })),
 
@@ -997,14 +1022,18 @@ export const useOS = create<OSState>()(
         set((s) => ({ restorePoints: s.restorePoints.filter((p) => p.id !== id) })),
 
       // ----- quick settings -----
-      quick: {
-        doNotDisturb: false,
-        nightLight: false,
-        brightness: 100,
-        volume: 70,
-        widgetsVisible: true,
-      },
-      setQuick: (patch) => set((s) => ({ quick: { ...s.quick, ...patch } })),
+      quick: { ...DEFAULT_QUICK },
+
+      setQuick: (patch) =>
+        set((s) => {
+          const next = { ...s.quick, ...patch };
+          // Focus/Gaming mode implies Do Not Disturb
+          if (patch.focusMode !== undefined) {
+            next.doNotDisturb = patch.focusMode !== "off" ? true : s.quick.doNotDisturb;
+          }
+          return { quick: next };
+        }),
+
 
       // ----- calendar -----
       events: [],
@@ -1093,29 +1122,14 @@ export const useOS = create<OSState>()(
             activeProfileId: id,
             profileData: nextData,
             fs: createInitialFS(),
-            settings: {
-              accent: "0.72 0.13 195",
-              wallpaperDim: 20,
-              username: target.name,
-              reduceTransparency: false,
-              wallpaperId: "dusk",
-              clock24h: false,
-              largeText: false,
-              animationsEnabled: true,
-              taskbarPosition: "bottom",
-            },
+            settings: { ...DEFAULT_SETTINGS, username: target.name },
             packages: [{ name: "nexus-core", version: "1.0.0" }],
             events: [],
             alarms: [],
             restorePoints: [],
             notifications: [],
-            quick: {
-              doNotDisturb: false,
-              nightLight: false,
-              brightness: 100,
-              volume: 70,
-              widgetsVisible: true,
-            },
+            quick: { ...DEFAULT_QUICK },
+
             windows: [],
             processes: initialProcesses(),
           });
@@ -1272,6 +1286,27 @@ export const useOS = create<OSState>()(
     }),
     {
       name: "nexus-os-v7",
+      version: 2,
+      migrate: (persisted: unknown, _version: number) => {
+        const p = (persisted as { settings?: Partial<Settings>; quick?: Partial<QuickSettings> } | null) ?? {};
+        const s = p.settings ?? {};
+        const q = p.quick ?? {};
+        return {
+          ...(persisted as object),
+          settings: {
+            ...DEFAULT_SETTINGS,
+            ...s,
+            pinnedApps: s.pinnedApps ?? DEFAULT_SETTINGS.pinnedApps,
+            enabledWidgets: s.enabledWidgets ?? DEFAULT_SETTINGS.enabledWidgets,
+            stickyNote: s.stickyNote ?? "",
+          },
+          quick: {
+            ...DEFAULT_QUICK,
+            ...q,
+            focusMode: q.focusMode ?? "off",
+          },
+        };
+      },
       partialize: (s) => ({
         fs: s.fs,
         settings: s.settings,
@@ -1293,9 +1328,9 @@ export const useOS = create<OSState>()(
         trash: s.trash,
         clipboard: s.clipboard,
         accessibility: s.accessibility,
-
       }),
     }
+
   )
 );
 
