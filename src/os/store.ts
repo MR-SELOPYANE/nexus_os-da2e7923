@@ -414,6 +414,36 @@ const DEFAULT_SIZE: Record<AppId, { w: number; h: number }> = {
   appstore: { w: 820, h: 600 },
 };
 
+const DEFAULT_PINNED: AppId[] = [
+  "files", "browser", "assistant", "notes", "terminal", "media", "photos", "settings",
+];
+const DEFAULT_WIDGETS: WidgetId[] = ["clock", "weather", "system", "events"];
+
+const DEFAULT_SETTINGS: Settings = {
+  accent: "0.72 0.13 195",
+  wallpaperDim: 20,
+  username: "guest",
+  reduceTransparency: false,
+  wallpaperId: "dusk",
+  clock24h: false,
+  largeText: false,
+  animationsEnabled: true,
+  taskbarPosition: "bottom",
+  pinnedApps: DEFAULT_PINNED,
+  enabledWidgets: DEFAULT_WIDGETS,
+  stickyNote: "",
+};
+
+const DEFAULT_QUICK: QuickSettings = {
+  doNotDisturb: false,
+  nightLight: false,
+  brightness: 100,
+  volume: 70,
+  widgetsVisible: true,
+  focusMode: "off",
+};
+
+
 const SYSTEM_PROCESSES: Omit<Process, "cpu" | "memory">[] = [
   { pid: 1, name: "nexus-kernel", status: "running", system: true },
   { pid: 2, name: "window-server", status: "running", system: true },
