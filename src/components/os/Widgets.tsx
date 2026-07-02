@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Cloud, Cpu, MemoryStick, CalendarDays, Sun, CloudRain, Snowflake } from "lucide-react";
+import { Cloud, Cpu, MemoryStick, CalendarDays, Sun, CloudRain, Snowflake, StickyNote } from "lucide-react";
 import { useOS } from "@/os/store";
 
 const WEATHER_PRESETS = [
@@ -11,6 +11,10 @@ const WEATHER_PRESETS = [
 
 export function Widgets() {
   const visible = useOS((s) => s.quick.widgetsVisible);
+  const focusMode = useOS((s) => s.quick.focusMode);
+  const enabled = useOS((s) => s.settings.enabledWidgets);
+  const stickyNote = useOS((s) => s.settings.stickyNote);
+  const updateSettings = useOS((s) => s.updateSettings);
   const processes = useOS((s) => s.processes);
   const events = useOS((s) => s.events);
   const online = useOS((s) => s.network.online);
@@ -22,7 +26,6 @@ export function Widgets() {
   }, []);
 
   const weather = useMemo(() => {
-    // deterministic based on day-of-year
     const day = Math.floor((+now - +new Date(now.getFullYear(), 0, 0)) / 86400000);
     return WEATHER_PRESETS[day % WEATHER_PRESETS.length];
   }, [now]);
@@ -35,68 +38,88 @@ export function Widgets() {
   const cpu = Math.min(100, processes.reduce((a, p) => a + p.cpu, 0));
   const mem = processes.reduce((a, p) => a + p.memory, 0);
 
-  if (!visible) return null;
+  // Hide widgets when off, in focus/gaming mode
+  if (!visible || focusMode !== "off") return null;
 
   const Wi = weather.icon;
+  const has = (id: string) => enabled.includes(id as never);
 
   return (
     <div className="pointer-events-none absolute right-3 top-3 z-0 flex w-64 flex-col gap-3">
-      {/* Clock */}
-      <div className="pointer-events-auto rounded-2xl glass-strong p-4 shadow-[var(--shadow-window)]">
-        <p className="font-mono text-4xl tabular-nums leading-none">
-          {now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-        </p>
-        <p className="mt-1 text-xs text-muted-foreground">
-          {now.toLocaleDateString([], { weekday: "long", month: "long", day: "numeric" })}
-        </p>
-      </div>
-
-      {/* Weather */}
-      <div className="pointer-events-auto flex items-center gap-3 rounded-2xl glass-strong p-4 shadow-[var(--shadow-window)]">
-        <Wi className="size-10 text-primary" />
-        <div className="flex-1">
-          <p className="text-3xl font-semibold leading-none">{weather.temp}°</p>
-          <p className="text-xs text-muted-foreground">{weather.label}</p>
+      {has("clock") && (
+        <div className="pointer-events-auto rounded-2xl glass-strong p-4 shadow-[var(--shadow-window)]">
+          <p className="font-mono text-4xl tabular-nums leading-none">
+            {now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+          </p>
+          <p className="mt-1 text-xs text-muted-foreground">
+            {now.toLocaleDateString([], { weekday: "long", month: "long", day: "numeric" })}
+          </p>
         </div>
-        <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
-          {online ? "Live" : "Cached"}
-        </p>
-      </div>
+      )}
 
-      {/* System stats */}
-      <div className="pointer-events-auto rounded-2xl glass-strong p-4 shadow-[var(--shadow-window)]">
-        <p className="mb-2 text-[10px] uppercase tracking-wider text-muted-foreground">System</p>
-        <Bar icon={<Cpu className="size-3.5" />} label="CPU" value={`${cpu.toFixed(0)}%`} pct={cpu} />
-        <div className="h-2" />
-        <Bar
-          icon={<MemoryStick className="size-3.5" />}
-          label="Memory"
-          value={`${(mem / 1024).toFixed(1)} GB`}
-          pct={Math.min(100, (mem / 4096) * 100)}
-        />
-      </div>
+      {has("weather") && (
+        <div className="pointer-events-auto flex items-center gap-3 rounded-2xl glass-strong p-4 shadow-[var(--shadow-window)]">
+          <Wi className="size-10 text-primary" />
+          <div className="flex-1">
+            <p className="text-3xl font-semibold leading-none">{weather.temp}°</p>
+            <p className="text-xs text-muted-foreground">{weather.label}</p>
+          </div>
+          <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
+            {online ? "Live" : "Cached"}
+          </p>
+        </div>
+      )}
 
-      {/* Today's events */}
-      <div className="pointer-events-auto rounded-2xl glass-strong p-4 shadow-[var(--shadow-window)]">
-        <p className="mb-2 flex items-center gap-1.5 text-[10px] uppercase tracking-wider text-muted-foreground">
-          <CalendarDays className="size-3.5" /> Today
-        </p>
-        {todayEvents.length === 0 ? (
-          <p className="text-xs text-muted-foreground">Nothing scheduled.</p>
-        ) : (
-          <ul className="space-y-1">
-            {todayEvents.map((e) => (
-              <li key={e.id} className="flex items-center gap-2 text-xs">
-                <span className="size-1.5 rounded-full bg-primary" />
-                <span className="flex-1 truncate">{e.title}</span>
-                {e.time && (
-                  <span className="font-mono tabular-nums text-muted-foreground">{e.time}</span>
-                )}
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
+      {has("system") && (
+        <div className="pointer-events-auto rounded-2xl glass-strong p-4 shadow-[var(--shadow-window)]">
+          <p className="mb-2 text-[10px] uppercase tracking-wider text-muted-foreground">System</p>
+          <Bar icon={<Cpu className="size-3.5" />} label="CPU" value={`${cpu.toFixed(0)}%`} pct={cpu} />
+          <div className="h-2" />
+          <Bar
+            icon={<MemoryStick className="size-3.5" />}
+            label="Memory"
+            value={`${(mem / 1024).toFixed(1)} GB`}
+            pct={Math.min(100, (mem / 4096) * 100)}
+          />
+        </div>
+      )}
+
+      {has("events") && (
+        <div className="pointer-events-auto rounded-2xl glass-strong p-4 shadow-[var(--shadow-window)]">
+          <p className="mb-2 flex items-center gap-1.5 text-[10px] uppercase tracking-wider text-muted-foreground">
+            <CalendarDays className="size-3.5" /> Today
+          </p>
+          {todayEvents.length === 0 ? (
+            <p className="text-xs text-muted-foreground">Nothing scheduled.</p>
+          ) : (
+            <ul className="space-y-1">
+              {todayEvents.map((e) => (
+                <li key={e.id} className="flex items-center gap-2 text-xs">
+                  <span className="size-1.5 rounded-full bg-primary" />
+                  <span className="flex-1 truncate">{e.title}</span>
+                  {e.time && (
+                    <span className="font-mono tabular-nums text-muted-foreground">{e.time}</span>
+                  )}
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
+
+      {has("note") && (
+        <div className="pointer-events-auto rounded-2xl glass-strong p-3 shadow-[var(--shadow-window)]">
+          <p className="mb-1.5 flex items-center gap-1.5 text-[10px] uppercase tracking-wider text-muted-foreground">
+            <StickyNote className="size-3.5" /> Quick note
+          </p>
+          <textarea
+            value={stickyNote}
+            onChange={(e) => updateSettings({ stickyNote: e.target.value })}
+            placeholder="Jot something down…"
+            className="h-24 w-full resize-none rounded-md border border-glass-border bg-white/5 p-2 text-xs outline-none focus:ring-1 focus:ring-primary/40"
+          />
+        </div>
+      )}
     </div>
   );
 }
