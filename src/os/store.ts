@@ -29,7 +29,15 @@ export type AppId =
   | "clipboard"
   | "accessibility"
   | "recorder"
-  | "appstore";
+  | "appstore"
+  | "codeeditor"
+  | "maps"
+  | "mail"
+  | "contacts"
+  | "imageeditor"
+  | "pdf"
+  | "firewall"
+  | "ssh";
 
 
 export interface Desktop {
