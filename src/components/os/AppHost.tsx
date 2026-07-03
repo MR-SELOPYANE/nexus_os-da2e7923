@@ -19,58 +19,45 @@ import { ClipboardManager } from "./apps/ClipboardManager";
 import { Accessibility } from "./apps/Accessibility";
 import { ScreenRecorder } from "./apps/ScreenRecorder";
 import { AppStore } from "./apps/AppStore";
-
-
-
-
-
+import { CodeEditor } from "./apps/CodeEditor";
+import { Maps } from "./apps/Maps";
+import { Mail } from "./apps/Mail";
+import { Contacts } from "./apps/Contacts";
+import { ImageEditor } from "./apps/ImageEditor";
+import { PdfViewer } from "./apps/PdfViewer";
+import { Firewall } from "./apps/Firewall";
+import { SshTerminal } from "./apps/SshTerminal";
 
 export function AppHost({ win }: { win: WindowState }) {
   switch (win.appId) {
-    case "calculator":
-      return <Calculator />;
-    case "notes":
-      return <Notes winId={win.id} payload={win.payload} />;
-    case "terminal":
-      return <Terminal />;
-    case "files":
-      return <FileExplorer />;
-    case "settings":
-      return <Settings />;
-    case "taskmanager":
-      return <TaskManager />;
-    case "browser":
-      return <Browser payload={win.payload} />;
-    case "about":
-      return <About />;
-    case "assistant":
-      return <Assistant />;
-    case "update":
-      return <UpdateManager />;
-    case "recovery":
-      return <Recovery />;
-    case "network":
-      return <Network />;
-    case "clock":
-      return <Clock />;
-    case "media":
-      return <Media />;
-    case "photos":
-      return <Photos />;
-    case "recyclebin":
-      return <RecycleBin />;
-    case "clipboard":
-      return <ClipboardManager />;
-    case "accessibility":
-      return <Accessibility />;
-    case "recorder":
-      return <ScreenRecorder />;
-    case "appstore":
-      return <AppStore />;
-
-
-
-    default:
-      return null;
+    case "calculator": return <Calculator />;
+    case "notes": return <Notes winId={win.id} payload={win.payload} />;
+    case "terminal": return <Terminal />;
+    case "files": return <FileExplorer />;
+    case "settings": return <Settings />;
+    case "taskmanager": return <TaskManager />;
+    case "browser": return <Browser payload={win.payload} />;
+    case "about": return <About />;
+    case "assistant": return <Assistant />;
+    case "update": return <UpdateManager />;
+    case "recovery": return <Recovery />;
+    case "network": return <Network />;
+    case "clock": return <Clock />;
+    case "media": return <Media />;
+    case "photos": return <Photos />;
+    case "recyclebin": return <RecycleBin />;
+    case "clipboard": return <ClipboardManager />;
+    case "accessibility": return <Accessibility />;
+    case "recorder": return <ScreenRecorder />;
+    case "appstore": return <AppStore />;
+    case "codeeditor": return <CodeEditor winId={win.id} payload={win.payload} />;
+    case "maps": return <Maps />;
+    case "mail": return <Mail />;
+    case "contacts": return <Contacts />;
+    case "imageeditor": return <ImageEditor />;
+    case "pdf": return <PdfViewer />;
+    case "firewall": return <Firewall />;
+    case "ssh": return <SshTerminal />;
+    default: return null;
   }
 }
