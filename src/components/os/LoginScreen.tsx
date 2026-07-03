@@ -254,7 +254,7 @@ export function LoginScreen() {
       {/* Power menu */}
       <div className="absolute bottom-6 right-6 flex gap-2 text-white">
         <button
-          onClick={() => window.location.reload()}
+          onClick={restart}
           title="Restart"
           className="grid size-10 place-items-center rounded-full bg-white/10 backdrop-blur hover:bg-white/20"
         >
