@@ -27,6 +27,9 @@ function PerfHudGate() {
 
 export function OSRoot() {
   const loggedIn = useOS((s) => s.loggedIn);
+  const bootComplete = useOS((s) => s.bootComplete);
+  const setBootComplete = useOS((s) => s.setBootComplete);
+  const shuttingDown = useOS((s) => s.shuttingDown);
   const locked = useOS((s) => s.locked);
   const windows = useOS((s) => s.windows);
   const activeDesktopId = useOS((s) => s.activeDesktopId);
