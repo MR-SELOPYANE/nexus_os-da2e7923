@@ -49,9 +49,7 @@ export function LoginScreen() {
     return () => clearInterval(t);
   }, []);
 
-  useEffect(() => {
-    if (!bootComplete) setBootComplete(true);
-  }, [bootComplete, setBootComplete]);
+  // bootComplete is set by BootSequence in OSRoot; nothing to do here.
 
   const trySignIn = (id: string, providedPin?: string) => {
     const target = profiles.find((p) => p.id === id);
