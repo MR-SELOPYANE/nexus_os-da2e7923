@@ -397,6 +397,14 @@ const APP_TITLES: Record<AppId, string> = {
   accessibility: "Accessibility",
   recorder: "Screen Recorder",
   appstore: "App Store",
+  codeeditor: "Code Editor",
+  maps: "Maps",
+  mail: "Mail",
+  contacts: "Contacts",
+  imageeditor: "Image Editor",
+  pdf: "PDF Viewer",
+  firewall: "Firewall",
+  ssh: "SSH Terminal",
 };
 
 const DEFAULT_SIZE: Record<AppId, { w: number; h: number }> = {
@@ -420,6 +428,14 @@ const DEFAULT_SIZE: Record<AppId, { w: number; h: number }> = {
   accessibility: { w: 640, h: 580 },
   recorder: { w: 540, h: 460 },
   appstore: { w: 820, h: 600 },
+  codeeditor: { w: 860, h: 580 },
+  maps: { w: 820, h: 560 },
+  mail: { w: 820, h: 560 },
+  contacts: { w: 620, h: 520 },
+  imageeditor: { w: 780, h: 560 },
+  pdf: { w: 720, h: 620 },
+  firewall: { w: 640, h: 520 },
+  ssh: { w: 720, h: 460 },
 };
 
 const DEFAULT_PINNED: AppId[] = [
