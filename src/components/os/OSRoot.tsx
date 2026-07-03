@@ -53,7 +53,7 @@ export function OSRoot() {
 
   useEffect(() => setHydrated(true), []);
 
-  // Toast on new notifications (respect DND)
+  // Toast + sound on new notifications (respect DND)
   useEffect(() => {
     const latest = notifications[0];
     if (!latest) return;
@@ -63,6 +63,7 @@ export function OSRoot() {
     if (first) return;
     if (quick.doNotDisturb) return;
     toast(latest.title, { description: latest.message });
+    try { sfx.notify(); } catch { /* ignore */ }
   }, [notifications, quick.doNotDisturb]);
 
   useEffect(() => {
