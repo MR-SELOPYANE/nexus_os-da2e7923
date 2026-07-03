@@ -16,6 +16,7 @@ const COLORS = [
 export function LoginScreen() {
   const login = useOS((s) => s.login);
   const shutdown = useOS((s) => s.shutdown);
+  const restart = useOS((s) => s.restart);
   const wallpaperId = useOS((s) => s.settings.wallpaperId);
   const locked = useOS((s) => s.locked);
   const bootComplete = useOS((s) => s.bootComplete);
