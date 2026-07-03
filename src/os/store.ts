@@ -519,6 +519,7 @@ export const useOS = create<OSState>()(
       bootComplete: false,
       loggedIn: false,
       locked: false,
+      shuttingDown: null,
       setBootComplete: (v) => set({ bootComplete: v }),
       login: () => {
         set({ loggedIn: true, locked: false });
@@ -531,11 +532,19 @@ export const useOS = create<OSState>()(
       logout: () => {
         set({ loggedIn: false, locked: false, windows: [], startMenuOpen: false });
         get().log("INFO", "User signed out");
-        // reset to system-only processes
         set({ processes: initialProcesses() });
       },
       shutdown: () => {
+        get().log("INFO", "Shutting down…");
+        set({ shuttingDown: "shutdown" });
+      },
+      restart: () => {
+        get().log("INFO", "Restarting…");
+        set({ shuttingDown: "restart" });
+      },
+      cancelShutdown: () => {
         set({
+          shuttingDown: null,
           loggedIn: false,
           locked: false,
           windows: [],
