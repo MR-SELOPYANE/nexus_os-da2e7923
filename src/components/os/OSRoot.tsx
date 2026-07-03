@@ -209,6 +209,22 @@ export function OSRoot() {
 
   if (!hydrated) return <div className="h-full w-full bg-background" />;
 
+  if (shuttingDown) {
+    return (
+      <div className="h-screen w-screen overflow-hidden">
+        <ShutdownScreen />
+      </div>
+    );
+  }
+
+  if (!bootComplete) {
+    return (
+      <div className="h-screen w-screen overflow-hidden">
+        <BootSequence onDone={() => setBootComplete(true)} />
+      </div>
+    );
+  }
+
   if (!loggedIn || locked) {
     return (
       <div className="h-screen w-screen overflow-hidden">
