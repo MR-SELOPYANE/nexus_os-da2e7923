@@ -242,11 +242,14 @@ interface OSState {
   bootComplete: boolean;
   loggedIn: boolean;
   locked: boolean;
+  shuttingDown: null | "shutdown" | "restart";
   setBootComplete: (v: boolean) => void;
   login: () => void;
   logout: () => void;
   lock: () => void;
   shutdown: () => void;
+  restart: () => void;
+  cancelShutdown: () => void;
 
   windows: WindowState[];
   zCounter: number;
