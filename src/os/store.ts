@@ -29,7 +29,15 @@ export type AppId =
   | "clipboard"
   | "accessibility"
   | "recorder"
-  | "appstore";
+  | "appstore"
+  | "codeeditor"
+  | "maps"
+  | "mail"
+  | "contacts"
+  | "imageeditor"
+  | "pdf"
+  | "firewall"
+  | "ssh";
 
 
 export interface Desktop {
@@ -234,11 +242,14 @@ interface OSState {
   bootComplete: boolean;
   loggedIn: boolean;
   locked: boolean;
+  shuttingDown: null | "shutdown" | "restart";
   setBootComplete: (v: boolean) => void;
   login: () => void;
   logout: () => void;
   lock: () => void;
   shutdown: () => void;
+  restart: () => void;
+  cancelShutdown: () => void;
 
   windows: WindowState[];
   zCounter: number;
@@ -389,6 +400,14 @@ const APP_TITLES: Record<AppId, string> = {
   accessibility: "Accessibility",
   recorder: "Screen Recorder",
   appstore: "App Store",
+  codeeditor: "Code Editor",
+  maps: "Maps",
+  mail: "Mail",
+  contacts: "Contacts",
+  imageeditor: "Image Editor",
+  pdf: "PDF Viewer",
+  firewall: "Firewall",
+  ssh: "SSH Terminal",
 };
 
 const DEFAULT_SIZE: Record<AppId, { w: number; h: number }> = {
@@ -412,6 +431,14 @@ const DEFAULT_SIZE: Record<AppId, { w: number; h: number }> = {
   accessibility: { w: 640, h: 580 },
   recorder: { w: 540, h: 460 },
   appstore: { w: 820, h: 600 },
+  codeeditor: { w: 860, h: 580 },
+  maps: { w: 820, h: 560 },
+  mail: { w: 820, h: 560 },
+  contacts: { w: 620, h: 520 },
+  imageeditor: { w: 780, h: 560 },
+  pdf: { w: 720, h: 620 },
+  firewall: { w: 640, h: 520 },
+  ssh: { w: 720, h: 460 },
 };
 
 const DEFAULT_PINNED: AppId[] = [
@@ -492,6 +519,7 @@ export const useOS = create<OSState>()(
       bootComplete: false,
       loggedIn: false,
       locked: false,
+      shuttingDown: null,
       setBootComplete: (v) => set({ bootComplete: v }),
       login: () => {
         set({ loggedIn: true, locked: false });
@@ -504,11 +532,19 @@ export const useOS = create<OSState>()(
       logout: () => {
         set({ loggedIn: false, locked: false, windows: [], startMenuOpen: false });
         get().log("INFO", "User signed out");
-        // reset to system-only processes
         set({ processes: initialProcesses() });
       },
       shutdown: () => {
+        get().log("INFO", "Shutting down…");
+        set({ shuttingDown: "shutdown" });
+      },
+      restart: () => {
+        get().log("INFO", "Restarting…");
+        set({ shuttingDown: "restart" });
+      },
+      cancelShutdown: () => {
         set({
+          shuttingDown: null,
           loggedIn: false,
           locked: false,
           windows: [],

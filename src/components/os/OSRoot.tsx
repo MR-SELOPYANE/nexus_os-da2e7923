@@ -15,7 +15,9 @@ import { HudAssistant, HudLauncher } from "./HudAssistant";
 import { AccessibilityOverlays, OnScreenKeyboard } from "./AccessibilityOverlays";
 import { PerfHUD } from "./PerfHUD";
 import { FocusModeBanner } from "./FocusModeBanner";
+import { BootSequence, ShutdownScreen } from "./BootSequence";
 import { WALLPAPERS } from "@/os/wallpapers";
+import { sfx } from "@/lib/sounds";
 
 
 function PerfHudGate() {
@@ -25,6 +27,9 @@ function PerfHudGate() {
 
 export function OSRoot() {
   const loggedIn = useOS((s) => s.loggedIn);
+  const bootComplete = useOS((s) => s.bootComplete);
+  const setBootComplete = useOS((s) => s.setBootComplete);
+  const shuttingDown = useOS((s) => s.shuttingDown);
   const locked = useOS((s) => s.locked);
   const windows = useOS((s) => s.windows);
   const activeDesktopId = useOS((s) => s.activeDesktopId);
@@ -48,7 +53,7 @@ export function OSRoot() {
 
   useEffect(() => setHydrated(true), []);
 
-  // Toast on new notifications (respect DND)
+  // Toast + sound on new notifications (respect DND)
   useEffect(() => {
     const latest = notifications[0];
     if (!latest) return;
@@ -58,6 +63,7 @@ export function OSRoot() {
     if (first) return;
     if (quick.doNotDisturb) return;
     toast(latest.title, { description: latest.message });
+    try { sfx.notify(); } catch { /* ignore */ }
   }, [notifications, quick.doNotDisturb]);
 
   useEffect(() => {
@@ -202,6 +208,22 @@ export function OSRoot() {
   }, [loggedIn, openApp, windows, focusWindow, minimizeWindow, activeDesktopId, cycleDesktop, captureScreenshot]);
 
   if (!hydrated) return <div className="h-full w-full bg-background" />;
+
+  if (shuttingDown) {
+    return (
+      <div className="h-screen w-screen overflow-hidden">
+        <ShutdownScreen />
+      </div>
+    );
+  }
+
+  if (!bootComplete) {
+    return (
+      <div className="h-screen w-screen overflow-hidden">
+        <BootSequence onDone={() => setBootComplete(true)} />
+      </div>
+    );
+  }
 
   if (!loggedIn || locked) {
     return (

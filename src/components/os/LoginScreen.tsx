@@ -16,6 +16,7 @@ const COLORS = [
 export function LoginScreen() {
   const login = useOS((s) => s.login);
   const shutdown = useOS((s) => s.shutdown);
+  const restart = useOS((s) => s.restart);
   const wallpaperId = useOS((s) => s.settings.wallpaperId);
   const locked = useOS((s) => s.locked);
   const bootComplete = useOS((s) => s.bootComplete);
@@ -49,9 +50,7 @@ export function LoginScreen() {
     return () => clearInterval(t);
   }, []);
 
-  useEffect(() => {
-    if (!bootComplete) setBootComplete(true);
-  }, [bootComplete, setBootComplete]);
+  // bootComplete is set by BootSequence in OSRoot; nothing to do here.
 
   const trySignIn = (id: string, providedPin?: string) => {
     const target = profiles.find((p) => p.id === id);
@@ -255,7 +254,7 @@ export function LoginScreen() {
       {/* Power menu */}
       <div className="absolute bottom-6 right-6 flex gap-2 text-white">
         <button
-          onClick={() => window.location.reload()}
+          onClick={restart}
           title="Restart"
           className="grid size-10 place-items-center rounded-full bg-white/10 backdrop-blur hover:bg-white/20"
         >
