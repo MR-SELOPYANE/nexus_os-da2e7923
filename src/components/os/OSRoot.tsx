@@ -15,7 +15,9 @@ import { HudAssistant, HudLauncher } from "./HudAssistant";
 import { AccessibilityOverlays, OnScreenKeyboard } from "./AccessibilityOverlays";
 import { PerfHUD } from "./PerfHUD";
 import { FocusModeBanner } from "./FocusModeBanner";
+import { BootSequence, ShutdownScreen } from "./BootSequence";
 import { WALLPAPERS } from "@/os/wallpapers";
+import { sfx } from "@/lib/sounds";
 
 
 function PerfHudGate() {
