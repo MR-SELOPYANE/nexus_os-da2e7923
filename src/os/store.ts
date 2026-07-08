@@ -183,13 +183,16 @@ export interface NotificationItem {
 
 export interface Process {
   pid: number;
+  parentPid: number;
   name: string;
-  status: "running" | "sleeping";
+  status: "running" | "sleeping" | "zombie";
   cpu: number;
   memory: number; // MB
+  priority: number; // -20 (high) .. 19 (low), 0 default
   windowId?: string;
   appId?: AppId;
   system: boolean;
+  startTime: number;
 }
 
 export interface LogEntry {
