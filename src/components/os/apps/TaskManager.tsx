@@ -123,7 +123,7 @@ function TreeView({ processes, expanded, setExpanded, killProcess, setPriority, 
     return m;
   }, [processes]);
 
-  const render = (parentPid: number, depth: number): JSX.Element[] => {
+  const render = (parentPid: number, depth: number): React.ReactNode[] => {
     const kids = byParent[parentPid] ?? [];
     return kids.flatMap((p) => {
       const hasKids = (byParent[p.pid] ?? []).length > 0;
