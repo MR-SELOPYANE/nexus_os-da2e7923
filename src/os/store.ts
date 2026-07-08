@@ -525,11 +525,11 @@ const DEFAULT_QUICK: QuickSettings = {
 
 
 const SYSTEM_PROCESSES: Omit<Process, "cpu" | "memory">[] = [
-  { pid: 1, name: "nexus-kernel", status: "running", system: true },
-  { pid: 2, name: "window-server", status: "running", system: true },
-  { pid: 3, name: "fs-daemon", status: "sleeping", system: true },
-  { pid: 4, name: "notification-hub", status: "sleeping", system: true },
-  { pid: 5, name: "nexus-shell", status: "running", system: true },
+  { pid: 1, parentPid: 0, name: "nexus-kernel", status: "running", system: true, priority: -20, startTime: 0 },
+  { pid: 2, parentPid: 1, name: "window-server", status: "running", system: true, priority: -10, startTime: 0 },
+  { pid: 3, parentPid: 1, name: "fs-daemon", status: "sleeping", system: true, priority: -5, startTime: 0 },
+  { pid: 4, parentPid: 1, name: "notification-hub", status: "sleeping", system: true, priority: 0, startTime: 0 },
+  { pid: 5, parentPid: 1, name: "nexus-shell", status: "running", system: true, priority: 0, startTime: 0 },
 ];
 
 let idSeq = 0;
