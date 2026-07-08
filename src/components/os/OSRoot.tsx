@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { toast, Toaster } from "sonner";
-import { useOS } from "@/os/store";
+import { useOS, THEME_PRESETS } from "@/os/store";
 import { LoginScreen } from "./LoginScreen";
 import { DesktopIcons } from "./DesktopIcons";
 import { WindowFrame } from "./WindowFrame";
