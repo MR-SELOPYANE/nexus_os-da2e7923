@@ -47,6 +47,7 @@ interface NavItem {
 
 const NAV: NavItem[] = [
   { id: "personalization", label: "Personalization", icon: Palette, group: "Personal" },
+  { id: "themes", label: "Themes", icon: Paintbrush, group: "Personal" },
   { id: "wallpaper", label: "Wallpaper", icon: ImageIcon, group: "Personal" },
   { id: "taskbar", label: "Taskbar & Dock", icon: Layout, group: "Personal" },
   { id: "display", label: "Display", icon: Monitor, group: "System" },
