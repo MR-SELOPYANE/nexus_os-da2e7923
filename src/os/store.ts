@@ -345,6 +345,8 @@ interface OSState {
   processes: Process[];
   tickProcesses: () => void;
   killProcess: (pid: number) => void;
+  setPriority: (pid: number, priority: number) => void;
+  toggleProcessSleep: (pid: number) => void;
 
   // logs
   logs: LogEntry[];
