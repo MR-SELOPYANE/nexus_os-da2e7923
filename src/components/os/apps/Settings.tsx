@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useOS } from "@/os/store";
+import { useRef, useState } from "react";
+import { useOS, THEME_PRESETS, type ThemeId, type ThemeTokens } from "@/os/store";
 import { WALLPAPERS } from "@/os/wallpapers";
 import {
   Palette,
