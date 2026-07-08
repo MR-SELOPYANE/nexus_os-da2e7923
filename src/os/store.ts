@@ -651,13 +651,16 @@ export const useOS = create<OSState>()(
         };
         const proc: Process = {
           pid,
+          parentPid: 5,
           name: APP_TITLES[appId],
           status: "running",
           cpu: +(seededRand(pid) * 8 + 1).toFixed(1),
           memory: Math.floor(80 + seededRand(pid + 1) * 240),
+          priority: 0,
           windowId: win.id,
           appId,
           system: false,
+          startTime: Date.now(),
         };
         set({
           startMenuOpen: false,
