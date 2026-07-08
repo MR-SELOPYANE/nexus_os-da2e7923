@@ -900,30 +900,54 @@ export const useOS = create<OSState>()(
       processes: initialProcesses(),
       tickProcesses: () =>
         set((s) => ({
-          processes: s.processes.map((p) => ({
-            ...p,
-            cpu: +(Math.max(
-              0.1,
-              p.system
-                ? 0.5 + seededRand(p.pid) * 3
-                : seededRand(p.pid) * 14
-            ).toFixed(1)),
-            memory: Math.max(
-              16,
-              Math.floor(p.memory + (seededRand(p.pid + 3) - 0.5) * 30)
-            ),
-          })),
+          processes: s.processes.flatMap((p) => {
+            if (p.status === "zombie") return []; // reap
+            // priority weight: -20 = highest CPU share, 19 = lowest
+            const weight = Math.max(0.05, (20 - p.priority) / 40);
+            const base = p.system ? 0.5 + seededRand(p.pid) * 2.5 : seededRand(p.pid) * 12;
+            const cpu = p.status === "sleeping" ? +(Math.min(0.4, base * 0.05).toFixed(2)) : +Math.max(0.05, base * weight).toFixed(1);
+            return [{
+              ...p,
+              cpu,
+              memory: Math.max(16, Math.floor(p.memory + (seededRand(p.pid + 3) - 0.5) * 24)),
+            }];
+          }),
         })),
       killProcess: (pid) => {
         const s = get();
         const p = s.processes.find((x) => x.pid === pid);
         if (!p || p.system) return;
-        if (p.windowId) {
-          get().closeWindow(p.windowId);
-        } else {
-          set({ processes: s.processes.filter((x) => x.pid !== pid) });
-        }
+        // orphan children -> reparent to init (1)
+        set({
+          processes: s.processes.map((x) =>
+            x.pid === pid
+              ? { ...x, status: "zombie" as const, cpu: 0 }
+              : x.parentPid === pid ? { ...x, parentPid: 1 } : x
+          ),
+        });
+        get().log("WARN", `SIGKILL -> ${p.name} (pid ${pid})`);
+        if (p.windowId) get().closeWindow(p.windowId);
+        // reap after brief delay
+        setTimeout(() => {
+          set((st) => ({ processes: st.processes.filter((x) => x.pid !== pid) }));
+        }, 900);
       },
+      setPriority: (pid, priority) => {
+        const clamped = Math.max(-20, Math.min(19, Math.round(priority)));
+        set((s) => ({
+          processes: s.processes.map((p) => (p.pid === pid ? { ...p, priority: clamped } : p)),
+        }));
+      },
+      toggleProcessSleep: (pid) => {
+        set((s) => ({
+          processes: s.processes.map((p) =>
+            p.pid === pid && p.status !== "zombie"
+              ? { ...p, status: p.status === "sleeping" ? "running" : "sleeping" }
+              : p
+          ),
+        }));
+      },
+
 
       logs: [],
       log: (level, message) =>
