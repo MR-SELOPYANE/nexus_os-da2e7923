@@ -220,6 +220,8 @@ export interface Settings {
   pinnedApps: AppId[];
   enabledWidgets: WidgetId[];
   stickyNote: string;
+  theme: ThemeId;
+  customTheme: ThemeTokens;
 }
 
 
