@@ -1408,7 +1408,7 @@ export const useOS = create<OSState>()(
     }),
     {
       name: "nexus-os-v7",
-      version: 2,
+      version: 3,
       migrate: (persisted: unknown, _version: number) => {
         const p = (persisted as { settings?: Partial<Settings>; quick?: Partial<QuickSettings> } | null) ?? {};
         const s = p.settings ?? {};
@@ -1421,6 +1421,8 @@ export const useOS = create<OSState>()(
             pinnedApps: s.pinnedApps ?? DEFAULT_SETTINGS.pinnedApps,
             enabledWidgets: s.enabledWidgets ?? DEFAULT_SETTINGS.enabledWidgets,
             stickyNote: s.stickyNote ?? "",
+            theme: s.theme ?? "dark",
+            customTheme: s.customTheme ?? THEME_PRESETS.dark,
           },
           quick: {
             ...DEFAULT_QUICK,
