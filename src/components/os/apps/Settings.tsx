@@ -25,6 +25,7 @@ import {
 
 type SectionId =
   | "personalization"
+  | "themes"
   | "wallpaper"
   | "display"
   | "sound"
