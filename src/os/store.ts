@@ -105,6 +105,56 @@ export interface QuickSettings {
 
 export type WidgetId = "clock" | "weather" | "system" | "events" | "note";
 
+export type ThemeId = "dark" | "light" | "midnight" | "custom";
+
+export interface ThemeTokens {
+  background: string;
+  foreground: string;
+  card: string;
+  muted: string;
+  mutedForeground: string;
+  border: string;
+  window: string;
+  taskbar: string;
+  glass: string;
+}
+
+export const THEME_PRESETS: Record<Exclude<ThemeId, "custom">, ThemeTokens> = {
+  dark: {
+    background: "0.18 0.03 240",
+    foreground: "0.97 0.01 240",
+    card: "0.22 0.03 240",
+    muted: "0.28 0.02 240",
+    mutedForeground: "0.68 0.02 240",
+    border: "0.4 0.02 240 / 0.5",
+    window: "0.2 0.025 240 / 0.92",
+    taskbar: "0.16 0.03 240 / 0.72",
+    glass: "0.24 0.03 240 / 0.7",
+  },
+  light: {
+    background: "0.97 0.005 240",
+    foreground: "0.2 0.02 240",
+    card: "0.94 0.008 240",
+    muted: "0.88 0.01 240",
+    mutedForeground: "0.4 0.02 240",
+    border: "0.75 0.015 240 / 0.6",
+    window: "0.98 0.005 240 / 0.92",
+    taskbar: "0.92 0.01 240 / 0.72",
+    glass: "0.95 0.008 240 / 0.7",
+  },
+  midnight: {
+    background: "0.1 0.025 265",
+    foreground: "0.96 0.015 265",
+    card: "0.14 0.03 265",
+    muted: "0.2 0.025 265",
+    mutedForeground: "0.68 0.02 265",
+    border: "0.35 0.03 265 / 0.5",
+    window: "0.12 0.03 265 / 0.92",
+    taskbar: "0.08 0.03 265 / 0.75",
+    glass: "0.16 0.03 265 / 0.7",
+  },
+};
+
 
 export interface WindowState {
   id: string;
@@ -133,13 +183,16 @@ export interface NotificationItem {
 
 export interface Process {
   pid: number;
+  parentPid: number;
   name: string;
-  status: "running" | "sleeping";
+  status: "running" | "sleeping" | "zombie";
   cpu: number;
   memory: number; // MB
+  priority: number; // -20 (high) .. 19 (low), 0 default
   windowId?: string;
   appId?: AppId;
   system: boolean;
+  startTime: number;
 }
 
 export interface LogEntry {
@@ -167,6 +220,8 @@ export interface Settings {
   pinnedApps: AppId[];
   enabledWidgets: WidgetId[];
   stickyNote: string;
+  theme: ThemeId;
+  customTheme: ThemeTokens;
 }
 
 
@@ -290,6 +345,8 @@ interface OSState {
   processes: Process[];
   tickProcesses: () => void;
   killProcess: (pid: number) => void;
+  setPriority: (pid: number, priority: number) => void;
+  toggleProcessSleep: (pid: number) => void;
 
   // logs
   logs: LogEntry[];
@@ -459,6 +516,8 @@ const DEFAULT_SETTINGS: Settings = {
   pinnedApps: DEFAULT_PINNED,
   enabledWidgets: DEFAULT_WIDGETS,
   stickyNote: "",
+  theme: "dark",
+  customTheme: THEME_PRESETS.dark,
 };
 
 const DEFAULT_QUICK: QuickSettings = {
@@ -472,11 +531,11 @@ const DEFAULT_QUICK: QuickSettings = {
 
 
 const SYSTEM_PROCESSES: Omit<Process, "cpu" | "memory">[] = [
-  { pid: 1, name: "nexus-kernel", status: "running", system: true },
-  { pid: 2, name: "window-server", status: "running", system: true },
-  { pid: 3, name: "fs-daemon", status: "sleeping", system: true },
-  { pid: 4, name: "notification-hub", status: "sleeping", system: true },
-  { pid: 5, name: "nexus-shell", status: "running", system: true },
+  { pid: 1, parentPid: 0, name: "nexus-kernel", status: "running", system: true, priority: -20, startTime: 0 },
+  { pid: 2, parentPid: 1, name: "window-server", status: "running", system: true, priority: -10, startTime: 0 },
+  { pid: 3, parentPid: 1, name: "fs-daemon", status: "sleeping", system: true, priority: -5, startTime: 0 },
+  { pid: 4, parentPid: 1, name: "notification-hub", status: "sleeping", system: true, priority: 0, startTime: 0 },
+  { pid: 5, parentPid: 1, name: "nexus-shell", status: "running", system: true, priority: 0, startTime: 0 },
 ];
 
 let idSeq = 0;
@@ -598,13 +657,16 @@ export const useOS = create<OSState>()(
         };
         const proc: Process = {
           pid,
+          parentPid: 5,
           name: APP_TITLES[appId],
           status: "running",
           cpu: +(seededRand(pid) * 8 + 1).toFixed(1),
           memory: Math.floor(80 + seededRand(pid + 1) * 240),
+          priority: 0,
           windowId: win.id,
           appId,
           system: false,
+          startTime: Date.now(),
         };
         set({
           startMenuOpen: false,
@@ -838,30 +900,54 @@ export const useOS = create<OSState>()(
       processes: initialProcesses(),
       tickProcesses: () =>
         set((s) => ({
-          processes: s.processes.map((p) => ({
-            ...p,
-            cpu: +(Math.max(
-              0.1,
-              p.system
-                ? 0.5 + seededRand(p.pid) * 3
-                : seededRand(p.pid) * 14
-            ).toFixed(1)),
-            memory: Math.max(
-              16,
-              Math.floor(p.memory + (seededRand(p.pid + 3) - 0.5) * 30)
-            ),
-          })),
+          processes: s.processes.flatMap((p) => {
+            if (p.status === "zombie") return []; // reap
+            // priority weight: -20 = highest CPU share, 19 = lowest
+            const weight = Math.max(0.05, (20 - p.priority) / 40);
+            const base = p.system ? 0.5 + seededRand(p.pid) * 2.5 : seededRand(p.pid) * 12;
+            const cpu = p.status === "sleeping" ? +(Math.min(0.4, base * 0.05).toFixed(2)) : +Math.max(0.05, base * weight).toFixed(1);
+            return [{
+              ...p,
+              cpu,
+              memory: Math.max(16, Math.floor(p.memory + (seededRand(p.pid + 3) - 0.5) * 24)),
+            }];
+          }),
         })),
       killProcess: (pid) => {
         const s = get();
         const p = s.processes.find((x) => x.pid === pid);
         if (!p || p.system) return;
-        if (p.windowId) {
-          get().closeWindow(p.windowId);
-        } else {
-          set({ processes: s.processes.filter((x) => x.pid !== pid) });
-        }
+        // orphan children -> reparent to init (1)
+        set({
+          processes: s.processes.map((x) =>
+            x.pid === pid
+              ? { ...x, status: "zombie" as const, cpu: 0 }
+              : x.parentPid === pid ? { ...x, parentPid: 1 } : x
+          ),
+        });
+        get().log("WARN", `SIGKILL -> ${p.name} (pid ${pid})`);
+        if (p.windowId) get().closeWindow(p.windowId);
+        // reap after brief delay
+        setTimeout(() => {
+          set((st) => ({ processes: st.processes.filter((x) => x.pid !== pid) }));
+        }, 900);
       },
+      setPriority: (pid, priority) => {
+        const clamped = Math.max(-20, Math.min(19, Math.round(priority)));
+        set((s) => ({
+          processes: s.processes.map((p) => (p.pid === pid ? { ...p, priority: clamped } : p)),
+        }));
+      },
+      toggleProcessSleep: (pid) => {
+        set((s) => ({
+          processes: s.processes.map((p) =>
+            p.pid === pid && p.status !== "zombie"
+              ? { ...p, status: p.status === "sleeping" ? "running" : "sleeping" }
+              : p
+          ),
+        }));
+      },
+
 
       logs: [],
       log: (level, message) =>
@@ -1322,7 +1408,7 @@ export const useOS = create<OSState>()(
     }),
     {
       name: "nexus-os-v7",
-      version: 2,
+      version: 3,
       migrate: (persisted: unknown, _version: number) => {
         const p = (persisted as { settings?: Partial<Settings>; quick?: Partial<QuickSettings> } | null) ?? {};
         const s = p.settings ?? {};
@@ -1335,6 +1421,8 @@ export const useOS = create<OSState>()(
             pinnedApps: s.pinnedApps ?? DEFAULT_SETTINGS.pinnedApps,
             enabledWidgets: s.enabledWidgets ?? DEFAULT_SETTINGS.enabledWidgets,
             stickyNote: s.stickyNote ?? "",
+            theme: s.theme ?? "dark",
+            customTheme: s.customTheme ?? THEME_PRESETS.dark,
           },
           quick: {
             ...DEFAULT_QUICK,

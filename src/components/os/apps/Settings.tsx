@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useOS } from "@/os/store";
+import { useRef, useState } from "react";
+import { useOS, THEME_PRESETS, type ThemeId, type ThemeTokens } from "@/os/store";
 import { WALLPAPERS } from "@/os/wallpapers";
 import {
   Palette,
@@ -17,11 +17,15 @@ import {
   Search,
   Moon,
   Plane,
+  Paintbrush,
+  Download,
+  Upload,
   type LucideIcon,
 } from "lucide-react";
 
 type SectionId =
   | "personalization"
+  | "themes"
   | "wallpaper"
   | "display"
   | "sound"
@@ -43,6 +47,7 @@ interface NavItem {
 
 const NAV: NavItem[] = [
   { id: "personalization", label: "Personalization", icon: Palette, group: "Personal" },
+  { id: "themes", label: "Themes", icon: Paintbrush, group: "Personal" },
   { id: "wallpaper", label: "Wallpaper", icon: ImageIcon, group: "Personal" },
   { id: "taskbar", label: "Taskbar & Dock", icon: Layout, group: "Personal" },
   { id: "display", label: "Display", icon: Monitor, group: "System" },
@@ -175,6 +180,9 @@ export function Settings() {
               />
             </Panel>
           )}
+
+          {active === "themes" && <ThemesPanel />}
+
 
           {active === "wallpaper" && (
             <Panel title="Wallpaper" description="Choose a background for the desktop.">
@@ -478,3 +486,148 @@ function InfoRow({ label, value }: { label: string; value: string }) {
     </div>
   );
 }
+
+const THEME_META: { id: ThemeId; label: string; desc: string }[] = [
+  { id: "dark", label: "Dark", desc: "Default deep navy surfaces." },
+  { id: "light", label: "Light", desc: "Bright, high-legibility." },
+  { id: "midnight", label: "Midnight", desc: "Near-black with violet tint." },
+  { id: "custom", label: "Custom", desc: "Your own tokens." },
+];
+
+const TOKEN_FIELDS: { key: keyof ThemeTokens; label: string }[] = [
+  { key: "background", label: "Background" },
+  { key: "foreground", label: "Foreground" },
+  { key: "card", label: "Card" },
+  { key: "muted", label: "Muted" },
+  { key: "mutedForeground", label: "Muted text" },
+  { key: "border", label: "Border" },
+  { key: "window", label: "Window" },
+  { key: "taskbar", label: "Taskbar" },
+  { key: "glass", label: "Glass" },
+];
+
+function ThemesPanel() {
+  const settings = useOS((s) => s.settings);
+  const update = useOS((s) => s.updateSettings);
+  const notify = useOS((s) => s.notify);
+  const fileRef = useRef<HTMLInputElement>(null);
+  const active = settings.theme;
+  const custom = settings.customTheme;
+
+  const applyPreset = (id: ThemeId) => {
+    if (id === "custom") {
+      update({ theme: "custom" });
+    } else {
+      update({ theme: id, customTheme: THEME_PRESETS[id] });
+    }
+  };
+
+  const setToken = (k: keyof ThemeTokens, v: string) => {
+    update({ theme: "custom", customTheme: { ...custom, [k]: v } });
+  };
+
+  const exportTheme = () => {
+    const payload = { name: settings.theme, accent: settings.accent, tokens: custom };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `nexus-theme-${settings.theme}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    notify({ title: "Theme exported", message: a.download });
+  };
+
+  const importTheme = (file: File) => {
+    file.text().then((t) => {
+      try {
+        const j = JSON.parse(t);
+        if (j.tokens && typeof j.tokens.background === "string") {
+          update({ theme: "custom", customTheme: j.tokens, ...(typeof j.accent === "string" ? { accent: j.accent } : {}) });
+          notify({ title: "Theme imported", message: "Custom theme applied." });
+        } else {
+          notify({ title: "Invalid theme file", message: "Missing tokens." });
+        }
+      } catch {
+        notify({ title: "Invalid theme file", message: "Could not parse JSON." });
+      }
+    });
+  };
+
+  return (
+    <Panel title="Themes" description="Change base colors and surfaces across NEXUS.">
+      <Row label="Preset">
+        <div className="grid grid-cols-2 gap-2">
+          {THEME_META.map((t) => {
+            const isActive = active === t.id;
+            const tokens = t.id === "custom" ? custom : THEME_PRESETS[t.id];
+            return (
+              <button
+                key={t.id}
+                onClick={() => applyPreset(t.id)}
+                className={`overflow-hidden rounded-lg border text-left transition-all ${isActive ? "border-primary ring-2 ring-primary/40" : "border-border hover:border-white/40"}`}
+              >
+                <div
+                  className="flex h-14 items-center justify-end gap-1 px-3"
+                  style={{ backgroundColor: `oklch(${tokens.background})` }}
+                >
+                  <span className="size-3 rounded-full" style={{ backgroundColor: `oklch(${tokens.card})` }} />
+                  <span className="size-3 rounded-full" style={{ backgroundColor: `oklch(${tokens.muted})` }} />
+                  <span className="size-3 rounded-full" style={{ backgroundColor: `oklch(${settings.accent})` }} />
+                </div>
+                <div className="px-3 py-1.5">
+                  <div className="text-sm font-medium">{t.label}</div>
+                  <div className="text-[11px] text-muted-foreground">{t.desc}</div>
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      </Row>
+
+      <Row label="Custom tokens (oklch — L C H or L C H / alpha)">
+        <div className="grid grid-cols-2 gap-2">
+          {TOKEN_FIELDS.map((f) => (
+            <label key={f.key} className="block text-xs">
+              <div className="mb-1 flex items-center gap-2 text-muted-foreground">
+                <span
+                  className="size-3 rounded-sm border border-white/20"
+                  style={{ backgroundColor: `oklch(${custom[f.key]})` }}
+                />
+                {f.label}
+              </div>
+              <input
+                value={custom[f.key]}
+                onChange={(e) => setToken(f.key, e.target.value)}
+                className="w-full rounded-md border border-input bg-black/30 px-2 py-1 font-mono text-[11px] outline-none focus:ring-2 focus:ring-ring"
+              />
+            </label>
+          ))}
+        </div>
+      </Row>
+
+      <div className="flex gap-2">
+        <button
+          onClick={exportTheme}
+          className="flex flex-1 items-center justify-center gap-2 rounded-md border border-border bg-black/20 px-3 py-2 text-sm hover:bg-white/5"
+        >
+          <Download className="size-3.5" /> Export theme
+        </button>
+        <button
+          onClick={() => fileRef.current?.click()}
+          className="flex flex-1 items-center justify-center gap-2 rounded-md border border-border bg-black/20 px-3 py-2 text-sm hover:bg-white/5"
+        >
+          <Upload className="size-3.5" /> Import theme
+        </button>
+        <input
+          ref={fileRef}
+          type="file"
+          accept="application/json,.json"
+          className="hidden"
+          onChange={(e) => e.target.files && importTheme(e.target.files[0])}
+        />
+      </div>
+    </Panel>
+  );
+}
+
