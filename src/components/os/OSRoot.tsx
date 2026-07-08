@@ -72,11 +72,28 @@ export function OSRoot() {
     root.style.setProperty("--accent", `oklch(${settings.accent})`);
     root.style.setProperty("--ring", `oklch(${settings.accent})`);
     root.style.fontSize = settings.largeText ? "18px" : "";
+    // Theme tokens
+    const tokens = settings.theme === "custom"
+      ? settings.customTheme
+      : THEME_PRESETS[settings.theme] ?? THEME_PRESETS.dark;
+    root.style.setProperty("--background", `oklch(${tokens.background})`);
+    root.style.setProperty("--foreground", `oklch(${tokens.foreground})`);
+    root.style.setProperty("--card", `oklch(${tokens.card})`);
+    root.style.setProperty("--card-foreground", `oklch(${tokens.foreground})`);
+    root.style.setProperty("--popover", `oklch(${tokens.card})`);
+    root.style.setProperty("--popover-foreground", `oklch(${tokens.foreground})`);
+    root.style.setProperty("--muted", `oklch(${tokens.muted})`);
+    root.style.setProperty("--muted-foreground", `oklch(${tokens.mutedForeground})`);
+    root.style.setProperty("--border", `oklch(${tokens.border})`);
+    root.style.setProperty("--window", `oklch(${tokens.window})`);
+    root.style.setProperty("--taskbar", `oklch(${tokens.taskbar})`);
+    root.style.setProperty("--glass", `oklch(${tokens.glass})`);
+    root.dataset.theme = settings.theme;
     // Gaming mode also implies animations off for perf.
     const animOn = settings.animationsEnabled && quick.focusMode !== "gaming";
     root.dataset.animations = animOn ? "on" : "off";
     root.dataset.focusMode = quick.focusMode;
-  }, [settings.accent, settings.largeText, settings.animationsEnabled, quick.focusMode]);
+  }, [settings.accent, settings.largeText, settings.animationsEnabled, settings.theme, settings.customTheme, quick.focusMode]);
 
 
   useEffect(() => {
