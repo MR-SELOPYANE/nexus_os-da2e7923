@@ -514,6 +514,8 @@ const DEFAULT_SETTINGS: Settings = {
   pinnedApps: DEFAULT_PINNED,
   enabledWidgets: DEFAULT_WIDGETS,
   stickyNote: "",
+  theme: "dark",
+  customTheme: THEME_PRESETS.dark,
 };
 
 const DEFAULT_QUICK: QuickSettings = {
