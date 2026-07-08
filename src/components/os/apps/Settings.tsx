@@ -181,6 +181,9 @@ export function Settings() {
             </Panel>
           )}
 
+          {active === "themes" && <ThemesPanel />}
+
+
           {active === "wallpaper" && (
             <Panel title="Wallpaper" description="Choose a background for the desktop.">
               <div className="grid grid-cols-3 gap-3">
