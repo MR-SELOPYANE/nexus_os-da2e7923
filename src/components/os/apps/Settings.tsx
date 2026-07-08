@@ -17,6 +17,9 @@ import {
   Search,
   Moon,
   Plane,
+  Paintbrush,
+  Download,
+  Upload,
   type LucideIcon,
 } from "lucide-react";
 
