@@ -105,6 +105,56 @@ export interface QuickSettings {
 
 export type WidgetId = "clock" | "weather" | "system" | "events" | "note";
 
+export type ThemeId = "dark" | "light" | "midnight" | "custom";
+
+export interface ThemeTokens {
+  background: string;
+  foreground: string;
+  card: string;
+  muted: string;
+  mutedForeground: string;
+  border: string;
+  window: string;
+  taskbar: string;
+  glass: string;
+}
+
+export const THEME_PRESETS: Record<Exclude<ThemeId, "custom">, ThemeTokens> = {
+  dark: {
+    background: "0.18 0.03 240",
+    foreground: "0.97 0.01 240",
+    card: "0.22 0.03 240",
+    muted: "0.28 0.02 240",
+    mutedForeground: "0.68 0.02 240",
+    border: "0.4 0.02 240 / 0.5",
+    window: "0.2 0.025 240 / 0.92",
+    taskbar: "0.16 0.03 240 / 0.72",
+    glass: "0.24 0.03 240 / 0.7",
+  },
+  light: {
+    background: "0.97 0.005 240",
+    foreground: "0.2 0.02 240",
+    card: "0.94 0.008 240",
+    muted: "0.88 0.01 240",
+    mutedForeground: "0.4 0.02 240",
+    border: "0.75 0.015 240 / 0.6",
+    window: "0.98 0.005 240 / 0.92",
+    taskbar: "0.92 0.01 240 / 0.72",
+    glass: "0.95 0.008 240 / 0.7",
+  },
+  midnight: {
+    background: "0.1 0.025 265",
+    foreground: "0.96 0.015 265",
+    card: "0.14 0.03 265",
+    muted: "0.2 0.025 265",
+    mutedForeground: "0.68 0.02 265",
+    border: "0.35 0.03 265 / 0.5",
+    window: "0.12 0.03 265 / 0.92",
+    taskbar: "0.08 0.03 265 / 0.75",
+    glass: "0.16 0.03 265 / 0.7",
+  },
+};
+
 
 export interface WindowState {
   id: string;
