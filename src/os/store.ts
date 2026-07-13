@@ -1482,7 +1482,7 @@ export const useOS = create<OSState>()(
         const id = uid();
         set((s) => ({
           downloads: [
-            { ...d, id, startedAt: Date.now(), status: "downloading", progress: 0 },
+            { ...d, id, startedAt: Date.now(), status: "downloading" as const, progress: 0 },
             ...s.downloads,
           ].slice(0, 50),
         }));
