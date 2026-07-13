@@ -547,6 +547,7 @@ const DEFAULT_SETTINGS: Settings = {
   stickyNote: "",
   theme: "dark",
   customTheme: THEME_PRESETS.dark,
+  searchEngine: "brave",
 };
 
 const DEFAULT_QUICK: QuickSettings = {
