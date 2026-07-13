@@ -27,6 +27,7 @@ type SectionId =
   | "personalization"
   | "themes"
   | "wallpaper"
+  | "browser"
   | "display"
   | "sound"
   | "notifications"
