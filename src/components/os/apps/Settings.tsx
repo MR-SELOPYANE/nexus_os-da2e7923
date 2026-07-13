@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import { useOS, THEME_PRESETS, type ThemeId, type ThemeTokens } from "@/os/store";
+import { useOS, THEME_PRESETS, type ThemeId, type ThemeTokens, type SearchEngineId } from "@/os/store";
 import { WALLPAPERS } from "@/os/wallpapers";
 import {
   Palette,
@@ -27,6 +27,7 @@ type SectionId =
   | "personalization"
   | "themes"
   | "wallpaper"
+  | "browser"
   | "display"
   | "sound"
   | "notifications"
@@ -50,6 +51,7 @@ const NAV: NavItem[] = [
   { id: "themes", label: "Themes", icon: Paintbrush, group: "Personal" },
   { id: "wallpaper", label: "Wallpaper", icon: ImageIcon, group: "Personal" },
   { id: "taskbar", label: "Taskbar & Dock", icon: Layout, group: "Personal" },
+  { id: "browser", label: "Browser", icon: Search, group: "System" },
   { id: "display", label: "Display", icon: Monitor, group: "System" },
   { id: "sound", label: "Sound", icon: Volume2, group: "System" },
   { id: "notifications", label: "Notifications", icon: Bell, group: "System" },
@@ -182,6 +184,40 @@ export function Settings() {
           )}
 
           {active === "themes" && <ThemesPanel />}
+
+          {active === "browser" && (
+            <Panel title="Browser" description="Default search engine and privacy for Nexus Browser.">
+              <div className="space-y-2">
+                <p className="text-sm font-medium">Default search engine</p>
+                <div className="grid grid-cols-2 gap-2">
+                  {([
+                    { id: "brave", label: "Brave", desc: "Privacy-focused, no tracking" },
+                    { id: "duckduckgo", label: "DuckDuckGo", desc: "Anonymous search" },
+                    { id: "google", label: "Google", desc: "Comprehensive results" },
+                    { id: "nexus", label: "Nexus Search", desc: "Native meta-search page" },
+                  ] as { id: SearchEngineId; label: string; desc: string }[]).map((e) => (
+                    <button
+                      key={e.id}
+                      onClick={() => update({ searchEngine: e.id })}
+                      className={`rounded-lg border p-3 text-left transition-colors ${
+                        settings.searchEngine === e.id
+                          ? "border-primary bg-primary/10"
+                          : "border-glass-border bg-white/5 hover:bg-white/10"
+                      }`}
+                    >
+                      <p className="text-sm font-medium">{e.label}</p>
+                      <p className="text-xs text-muted-foreground">{e.desc}</p>
+                    </button>
+                  ))}
+                </div>
+                <p className="pt-2 text-xs text-muted-foreground">
+                  Nexus Browser fetches pages through a server-side proxy that strips X-Frame-Options and CSP, letting most sites render inside the shell. It's a real browsing surface — not a real browser engine (that would need native code, not JavaScript).
+                </p>
+              </div>
+            </Panel>
+          )}
+
+
 
 
           {active === "wallpaper" && (

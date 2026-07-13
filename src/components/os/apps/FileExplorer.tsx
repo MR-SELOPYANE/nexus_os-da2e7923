@@ -94,9 +94,17 @@ export function FileExplorer() {
             This folder is empty
           </p>
         )}
-        {entries.map(([name, child]) => (
+        {entries.map(([name, child]) => {
+          const fullPath = `${cwd}/${name}`.replace("//", "/");
+          return (
           <div
             key={name}
+            draggable
+            onDragStart={(e) => {
+              e.dataTransfer.setData("application/x-nexus-file", fullPath);
+              e.dataTransfer.setData("text/plain", fullPath);
+              e.dataTransfer.effectAllowed = "copy";
+            }}
             onDoubleClick={() => openEntry(name)}
             onClick={(e) => {
               if (e.detail === 1) return;
@@ -125,7 +133,8 @@ export function FileExplorer() {
             </button>
 
           </div>
-        ))}
+          );
+        })}
       </div>
 
       <div className="border-t border-glass-border px-3 py-1 text-xs text-muted-foreground">

@@ -80,9 +80,16 @@ export function Notes({ winId, payload }: { winId: string; payload?: Record<stri
         <textarea
           value={text}
           onChange={(e) => { setText(e.target.value); setDirty(true); }}
+          onDragOver={(e) => {
+            if (e.dataTransfer.types.includes("application/x-nexus-file")) e.preventDefault();
+          }}
+          onDrop={(e) => {
+            const p = e.dataTransfer.getData("application/x-nexus-file");
+            if (p) { e.preventDefault(); open(p); }
+          }}
           spellCheck={false}
           className="flex-1 resize-none bg-transparent p-4 font-mono text-sm leading-relaxed outline-none os-scroll selection:bg-primary/30"
-          placeholder="Start typing…"
+          placeholder="Start typing… (drag files here to open)"
         />
       </div>
     </div>

@@ -76,6 +76,34 @@ export interface ClipEntry {
   pinned?: boolean;
 }
 
+export interface Bookmark {
+  id: string;
+  title: string;
+  url: string;
+  addedAt: number;
+}
+
+export interface HistoryEntry {
+  id: string;
+  url: string;
+  title: string;
+  visitedAt: number;
+}
+
+export interface DownloadEntry {
+  id: string;
+  url: string;
+  filename: string;
+  size: number; // bytes
+  startedAt: number;
+  status: "downloading" | "complete" | "failed";
+  progress: number; // 0-100
+  path?: string; // VFS path after complete
+}
+
+export type SearchEngineId = "brave" | "duckduckgo" | "google" | "nexus";
+
+
 export type ColorBlindMode = "none" | "protanopia" | "deuteranopia" | "tritanopia" | "achromatopsia";
 
 export interface AccessibilityState {
@@ -222,6 +250,7 @@ export interface Settings {
   stickyNote: string;
   theme: ThemeId;
   customTheme: ThemeTokens;
+  searchEngine: SearchEngineId;
 }
 
 
@@ -432,6 +461,19 @@ interface OSState {
   // accessibility
   accessibility: AccessibilityState;
   setAccessibility: (patch: Partial<AccessibilityState>) => void;
+
+  // browser
+  bookmarks: Bookmark[];
+  browserHistory: HistoryEntry[];
+  downloads: DownloadEntry[];
+  addBookmark: (b: Omit<Bookmark, "id" | "addedAt">) => void;
+  removeBookmark: (id: string) => void;
+  addHistory: (h: Omit<HistoryEntry, "id" | "visitedAt">) => void;
+  clearHistory: () => void;
+  removeHistory: (id: string) => void;
+  addDownload: (d: Omit<DownloadEntry, "id" | "startedAt" | "status" | "progress">) => string;
+  updateDownload: (id: string, patch: Partial<DownloadEntry>) => void;
+  clearDownloads: () => void;
 }
 
 export type SnapZone = "left" | "right" | "top" | "tl" | "tr" | "bl" | "br";
@@ -518,6 +560,7 @@ const DEFAULT_SETTINGS: Settings = {
   stickyNote: "",
   theme: "dark",
   customTheme: THEME_PRESETS.dark,
+  searchEngine: "brave",
 };
 
 const DEFAULT_QUICK: QuickSettings = {
@@ -1405,10 +1448,56 @@ export const useOS = create<OSState>()(
       },
       setAccessibility: (patch) =>
         set((s) => ({ accessibility: { ...s.accessibility, ...patch } })),
+
+      // ----- browser -----
+      bookmarks: [
+        { id: "bm1", title: "Wikipedia", url: "https://en.wikipedia.org", addedAt: Date.now() },
+        { id: "bm2", title: "MDN", url: "https://developer.mozilla.org", addedAt: Date.now() },
+        { id: "bm3", title: "Nexus Search", url: "nexus://search", addedAt: Date.now() },
+      ],
+      browserHistory: [],
+      downloads: [],
+      addBookmark: (b) =>
+        set((s) =>
+          s.bookmarks.some((x) => x.url === b.url)
+            ? {}
+            : { bookmarks: [{ ...b, id: uid(), addedAt: Date.now() }, ...s.bookmarks] }
+        ),
+      removeBookmark: (id) =>
+        set((s) => ({ bookmarks: s.bookmarks.filter((b) => b.id !== id) })),
+      addHistory: (h) =>
+        set((s) => {
+          const filtered = s.browserHistory.filter((x) => x.url !== h.url);
+          return {
+            browserHistory: [
+              { ...h, id: uid(), visitedAt: Date.now() },
+              ...filtered,
+            ].slice(0, 300),
+          };
+        }),
+      clearHistory: () => set({ browserHistory: [] }),
+      removeHistory: (id) =>
+        set((s) => ({ browserHistory: s.browserHistory.filter((h) => h.id !== id) })),
+      addDownload: (d) => {
+        const id = uid();
+        set((s) => ({
+          downloads: [
+            { ...d, id, startedAt: Date.now(), status: "downloading" as const, progress: 0 },
+            ...s.downloads,
+          ].slice(0, 50),
+        }));
+        return id;
+      },
+      updateDownload: (id, patch) =>
+        set((s) => ({
+          downloads: s.downloads.map((d) => (d.id === id ? { ...d, ...patch } : d)),
+        })),
+      clearDownloads: () =>
+        set((s) => ({ downloads: s.downloads.filter((d) => d.status === "downloading") })),
     }),
     {
       name: "nexus-os-v7",
-      version: 3,
+      version: 4,
       migrate: (persisted: unknown, _version: number) => {
         const p = (persisted as { settings?: Partial<Settings>; quick?: Partial<QuickSettings> } | null) ?? {};
         const s = p.settings ?? {};
@@ -1423,6 +1512,7 @@ export const useOS = create<OSState>()(
             stickyNote: s.stickyNote ?? "",
             theme: s.theme ?? "dark",
             customTheme: s.customTheme ?? THEME_PRESETS.dark,
+            searchEngine: s.searchEngine ?? "brave",
           },
           quick: {
             ...DEFAULT_QUICK,
@@ -1452,6 +1542,9 @@ export const useOS = create<OSState>()(
         trash: s.trash,
         clipboard: s.clipboard,
         accessibility: s.accessibility,
+        bookmarks: s.bookmarks,
+        browserHistory: s.browserHistory,
+        downloads: s.downloads,
       }),
     }
 
