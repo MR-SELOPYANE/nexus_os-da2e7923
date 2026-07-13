@@ -250,6 +250,7 @@ export interface Settings {
   stickyNote: string;
   theme: ThemeId;
   customTheme: ThemeTokens;
+  searchEngine: SearchEngineId;
 }
 
 
