@@ -76,6 +76,34 @@ export interface ClipEntry {
   pinned?: boolean;
 }
 
+export interface Bookmark {
+  id: string;
+  title: string;
+  url: string;
+  addedAt: number;
+}
+
+export interface HistoryEntry {
+  id: string;
+  url: string;
+  title: string;
+  visitedAt: number;
+}
+
+export interface DownloadEntry {
+  id: string;
+  url: string;
+  filename: string;
+  size: number; // bytes
+  startedAt: number;
+  status: "downloading" | "complete" | "failed";
+  progress: number; // 0-100
+  path?: string; // VFS path after complete
+}
+
+export type SearchEngineId = "brave" | "duckduckgo" | "google" | "nexus";
+
+
 export type ColorBlindMode = "none" | "protanopia" | "deuteranopia" | "tritanopia" | "achromatopsia";
 
 export interface AccessibilityState {
