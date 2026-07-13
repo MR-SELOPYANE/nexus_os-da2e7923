@@ -51,6 +51,7 @@ const NAV: NavItem[] = [
   { id: "themes", label: "Themes", icon: Paintbrush, group: "Personal" },
   { id: "wallpaper", label: "Wallpaper", icon: ImageIcon, group: "Personal" },
   { id: "taskbar", label: "Taskbar & Dock", icon: Layout, group: "Personal" },
+  { id: "browser", label: "Browser", icon: Search, group: "System" },
   { id: "display", label: "Display", icon: Monitor, group: "System" },
   { id: "sound", label: "Sound", icon: Volume2, group: "System" },
   { id: "notifications", label: "Notifications", icon: Bell, group: "System" },
