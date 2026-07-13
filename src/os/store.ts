@@ -1448,6 +1448,52 @@ export const useOS = create<OSState>()(
       },
       setAccessibility: (patch) =>
         set((s) => ({ accessibility: { ...s.accessibility, ...patch } })),
+
+      // ----- browser -----
+      bookmarks: [
+        { id: "bm1", title: "Wikipedia", url: "https://en.wikipedia.org", addedAt: Date.now() },
+        { id: "bm2", title: "MDN", url: "https://developer.mozilla.org", addedAt: Date.now() },
+        { id: "bm3", title: "Nexus Search", url: "nexus://search", addedAt: Date.now() },
+      ],
+      browserHistory: [],
+      downloads: [],
+      addBookmark: (b) =>
+        set((s) =>
+          s.bookmarks.some((x) => x.url === b.url)
+            ? {}
+            : { bookmarks: [{ ...b, id: uid(), addedAt: Date.now() }, ...s.bookmarks] }
+        ),
+      removeBookmark: (id) =>
+        set((s) => ({ bookmarks: s.bookmarks.filter((b) => b.id !== id) })),
+      addHistory: (h) =>
+        set((s) => {
+          const filtered = s.browserHistory.filter((x) => x.url !== h.url);
+          return {
+            browserHistory: [
+              { ...h, id: uid(), visitedAt: Date.now() },
+              ...filtered,
+            ].slice(0, 300),
+          };
+        }),
+      clearHistory: () => set({ browserHistory: [] }),
+      removeHistory: (id) =>
+        set((s) => ({ browserHistory: s.browserHistory.filter((h) => h.id !== id) })),
+      addDownload: (d) => {
+        const id = uid();
+        set((s) => ({
+          downloads: [
+            { ...d, id, startedAt: Date.now(), status: "downloading", progress: 0 },
+            ...s.downloads,
+          ].slice(0, 50),
+        }));
+        return id;
+      },
+      updateDownload: (id, patch) =>
+        set((s) => ({
+          downloads: s.downloads.map((d) => (d.id === id ? { ...d, ...patch } : d)),
+        })),
+      clearDownloads: () =>
+        set((s) => ({ downloads: s.downloads.filter((d) => d.status === "downloading") })),
     }),
     {
       name: "nexus-os-v7",
