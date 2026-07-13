@@ -461,6 +461,19 @@ interface OSState {
   // accessibility
   accessibility: AccessibilityState;
   setAccessibility: (patch: Partial<AccessibilityState>) => void;
+
+  // browser
+  bookmarks: Bookmark[];
+  browserHistory: HistoryEntry[];
+  downloads: DownloadEntry[];
+  addBookmark: (b: Omit<Bookmark, "id" | "addedAt">) => void;
+  removeBookmark: (id: string) => void;
+  addHistory: (h: Omit<HistoryEntry, "id" | "visitedAt">) => void;
+  clearHistory: () => void;
+  removeHistory: (id: string) => void;
+  addDownload: (d: Omit<DownloadEntry, "id" | "startedAt" | "status" | "progress">) => string;
+  updateDownload: (id: string, patch: Partial<DownloadEntry>) => void;
+  clearDownloads: () => void;
 }
 
 export type SnapZone = "left" | "right" | "top" | "tl" | "tr" | "bl" | "br";
