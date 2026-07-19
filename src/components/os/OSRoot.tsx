@@ -44,6 +44,7 @@ export function OSRoot() {
   const focusWindow = useOS((s) => s.focusWindow);
   const cycleDesktop = useOS((s) => s.cycleDesktop);
   const captureScreenshot = useOS((s) => s.captureScreenshot);
+  const firstBootDone = useOS((s) => s.sa.firstBootDone);
   const [hydrated, setHydrated] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
   const [menu, setMenu] = useState<{ x: number; y: number } | null>(null);
