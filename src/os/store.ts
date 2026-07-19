@@ -551,6 +551,12 @@ const APP_TITLES: Record<AppId, string> = {
   pdf: "PDF Viewer",
   firewall: "Firewall",
   ssh: "SSH Terminal",
+  knowledge: "Knowledge Hub",
+  student: "Student Edition",
+  government: "Government Hub",
+  emergency: "Emergency Mode",
+  security: "AI Security Center",
+  cloud: "NEXUS Cloud",
 };
 
 const DEFAULT_SIZE: Record<AppId, { w: number; h: number }> = {
