@@ -518,6 +518,14 @@ interface OSState {
   addDownload: (d: Omit<DownloadEntry, "id" | "startedAt" | "status" | "progress">) => string;
   updateDownload: (id: string, patch: Partial<DownloadEntry>) => void;
   clearDownloads: () => void;
+
+  // south african / african edition
+  sa: SAState;
+  updateSA: (patch: Partial<SAState>) => void;
+  addEmergencyContact: (c: Omit<EmergencyContact, "id">) => void;
+  removeEmergencyContact: (id: string) => void;
+  triggerLoadShedding: (stage: SAState["loadSheddingStage"]) => void;
+  syncCloud: () => Promise<void>;
 }
 
 export type SnapZone = "left" | "right" | "top" | "tl" | "tr" | "bl" | "br";
