@@ -37,7 +37,51 @@ export type AppId =
   | "imageeditor"
   | "pdf"
   | "firewall"
-  | "ssh";
+  | "ssh"
+  | "knowledge"
+  | "student"
+  | "government"
+  | "emergency"
+  | "security"
+  | "cloud";
+
+// ================= South African / African Edition =================
+export type SAProvince =
+  | "Gauteng" | "Western Cape" | "KwaZulu-Natal" | "Eastern Cape"
+  | "Free State" | "Limpopo" | "Mpumalanga" | "North West" | "Northern Cape";
+
+export type SALanguage =
+  | "English" | "isiZulu" | "isiXhosa" | "Afrikaans" | "Sesotho"
+  | "Setswana" | "Sepedi" | "Xitsonga" | "Tshivenda" | "siSwati" | "isiNdebele";
+
+export type PowerMode = "balanced" | "solar" | "loadshedding" | "battery-saver";
+export type PerformanceMode = "auto" | "high" | "balanced" | "eco";
+
+export interface EmergencyContact {
+  id: string;
+  name: string;
+  relation: string;
+  phone: string;
+}
+
+export interface SAState {
+  firstBootDone: boolean;
+  province: SAProvince;
+  language: SALanguage;
+  aiLanguage: SALanguage;
+  dataSaver: boolean;
+  ruralMode: boolean;
+  powerMode: PowerMode;
+  performanceMode: PerformanceMode;
+  loadSheddingStage: 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
+  batteryPct: number;
+  cloudSyncEnabled: boolean;
+  lastCloudSync: number | null;
+  emergencyContacts: EmergencyContact[];
+  medicalNotes: string;
+  bloodType: string;
+  allergies: string;
+}
 
 
 export interface Desktop {
@@ -474,6 +518,14 @@ interface OSState {
   addDownload: (d: Omit<DownloadEntry, "id" | "startedAt" | "status" | "progress">) => string;
   updateDownload: (id: string, patch: Partial<DownloadEntry>) => void;
   clearDownloads: () => void;
+
+  // south african / african edition
+  sa: SAState;
+  updateSA: (patch: Partial<SAState>) => void;
+  addEmergencyContact: (c: Omit<EmergencyContact, "id">) => void;
+  removeEmergencyContact: (id: string) => void;
+  triggerLoadShedding: (stage: SAState["loadSheddingStage"]) => void;
+  syncCloud: () => Promise<void>;
 }
 
 export type SnapZone = "left" | "right" | "top" | "tl" | "tr" | "bl" | "br";
@@ -507,6 +559,12 @@ const APP_TITLES: Record<AppId, string> = {
   pdf: "PDF Viewer",
   firewall: "Firewall",
   ssh: "SSH Terminal",
+  knowledge: "Knowledge Hub",
+  student: "Student Edition",
+  government: "Government Hub",
+  emergency: "Emergency Mode",
+  security: "AI Security Center",
+  cloud: "NEXUS Cloud",
 };
 
 const DEFAULT_SIZE: Record<AppId, { w: number; h: number }> = {
@@ -538,6 +596,12 @@ const DEFAULT_SIZE: Record<AppId, { w: number; h: number }> = {
   pdf: { w: 720, h: 620 },
   firewall: { w: 640, h: 520 },
   ssh: { w: 720, h: 460 },
+  knowledge: { w: 860, h: 600 },
+  student: { w: 820, h: 580 },
+  government: { w: 820, h: 600 },
+  emergency: { w: 640, h: 580 },
+  security: { w: 780, h: 560 },
+  cloud: { w: 720, h: 540 },
 };
 
 const DEFAULT_PINNED: AppId[] = [
@@ -1494,10 +1558,65 @@ export const useOS = create<OSState>()(
         })),
       clearDownloads: () =>
         set((s) => ({ downloads: s.downloads.filter((d) => d.status === "downloading") })),
+
+      // ----- south african / african edition -----
+      sa: {
+        firstBootDone: false,
+        province: "Gauteng",
+        language: "English",
+        aiLanguage: "English",
+        dataSaver: false,
+        ruralMode: false,
+        powerMode: "balanced",
+        performanceMode: "auto",
+        loadSheddingStage: 0,
+        batteryPct: 87,
+        cloudSyncEnabled: false,
+        lastCloudSync: null,
+        emergencyContacts: [],
+        medicalNotes: "",
+        bloodType: "",
+        allergies: "",
+      },
+      updateSA: (patch) => set((s) => ({ sa: { ...s.sa, ...patch } })),
+      addEmergencyContact: (c) =>
+        set((s) => ({
+          sa: {
+            ...s.sa,
+            emergencyContacts: [
+              ...s.sa.emergencyContacts,
+              { ...c, id: `ec${Date.now().toString(36)}` },
+            ],
+          },
+        })),
+      removeEmergencyContact: (id) =>
+        set((s) => ({
+          sa: {
+            ...s.sa,
+            emergencyContacts: s.sa.emergencyContacts.filter((c) => c.id !== id),
+          },
+        })),
+      triggerLoadShedding: (stage) => {
+        set((s) => ({ sa: { ...s.sa, loadSheddingStage: stage } }));
+        if (stage > 0) {
+          get().notify({
+            title: `Load shedding stage ${stage}`,
+            message: "Power Intelligence has enabled battery saver and dimmed the display.",
+          });
+          get().setQuick({ brightness: 55 });
+          get().updateSA({ powerMode: "loadshedding" });
+        }
+      },
+      syncCloud: async () => {
+        get().notify({ title: "NEXUS Cloud", message: "Syncing your files & settings…" });
+        await new Promise((r) => setTimeout(r, 900));
+        set((s) => ({ sa: { ...s.sa, lastCloudSync: Date.now(), cloudSyncEnabled: true } }));
+        get().notify({ title: "NEXUS Cloud", message: "Sync complete." });
+      },
     }),
     {
       name: "nexus-os-v7",
-      version: 4,
+      version: 5,
       migrate: (persisted: unknown, _version: number) => {
         const p = (persisted as { settings?: Partial<Settings>; quick?: Partial<QuickSettings> } | null) ?? {};
         const s = p.settings ?? {};
@@ -1545,6 +1664,7 @@ export const useOS = create<OSState>()(
         bookmarks: s.bookmarks,
         browserHistory: s.browserHistory,
         downloads: s.downloads,
+        sa: s.sa,
       }),
     }
 

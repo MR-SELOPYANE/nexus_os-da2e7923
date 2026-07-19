@@ -16,6 +16,7 @@ import { AccessibilityOverlays, OnScreenKeyboard } from "./AccessibilityOverlays
 import { PerfHUD } from "./PerfHUD";
 import { FocusModeBanner } from "./FocusModeBanner";
 import { BootSequence, ShutdownScreen } from "./BootSequence";
+import { FirstBootWizard } from "./FirstBootWizard";
 import { WALLPAPERS } from "@/os/wallpapers";
 import { sfx } from "@/lib/sounds";
 
@@ -43,6 +44,7 @@ export function OSRoot() {
   const focusWindow = useOS((s) => s.focusWindow);
   const cycleDesktop = useOS((s) => s.cycleDesktop);
   const captureScreenshot = useOS((s) => s.captureScreenshot);
+  const firstBootDone = useOS((s) => s.sa.firstBootDone);
   const [hydrated, setHydrated] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
   const [menu, setMenu] = useState<{ x: number; y: number } | null>(null);
@@ -298,6 +300,8 @@ export function OSRoot() {
       <OnScreenKeyboard />
       <PerfHudGate />
       <FocusModeBanner />
+
+      {!firstBootDone && <FirstBootWizard />}
 
 
 

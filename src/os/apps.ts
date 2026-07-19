@@ -27,6 +27,12 @@ import {
   FileType2,
   Shield,
   ServerCog,
+  GraduationCap,
+  Landmark,
+  Siren,
+  ShieldCheck,
+  Cloud,
+  BookOpen,
   type LucideIcon,
 } from "lucide-react";
 import type { AppId } from "./store";
@@ -70,6 +76,13 @@ export const APPS: AppMeta[] = [
   { id: "settings", name: "Settings", icon: SettingsIcon, tile: "from-slate-400 to-slate-600" },
   { id: "taskmanager", name: "Task Manager", icon: Activity, tile: "from-rose-400 to-red-600" },
   { id: "about", name: "About", icon: Info, tile: "from-violet-400 to-purple-600" },
+  // African Edition flagships
+  { id: "knowledge", name: "Knowledge Hub", icon: BookOpen, tile: "from-amber-500 to-orange-700", showOnDesktop: true },
+  { id: "student", name: "Student", icon: GraduationCap, tile: "from-emerald-500 to-teal-700", showOnDesktop: true },
+  { id: "government", name: "Government Hub", icon: Landmark, tile: "from-yellow-500 to-green-700", showOnDesktop: true },
+  { id: "emergency", name: "Emergency", icon: Siren, tile: "from-red-600 to-orange-700", showOnDesktop: true },
+  { id: "security", name: "AI Security", icon: ShieldCheck, tile: "from-indigo-500 to-fuchsia-700", showOnDesktop: true },
+  { id: "cloud", name: "NEXUS Cloud", icon: Cloud, tile: "from-sky-500 to-cyan-700", showOnDesktop: true },
 ];
 
 export const APP_MAP: Record<AppId, AppMeta> = APPS.reduce(

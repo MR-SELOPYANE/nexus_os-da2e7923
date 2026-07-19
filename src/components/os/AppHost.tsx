@@ -27,6 +27,12 @@ import { ImageEditor } from "./apps/ImageEditor";
 import { PdfViewer } from "./apps/PdfViewer";
 import { Firewall } from "./apps/Firewall";
 import { SshTerminal } from "./apps/SshTerminal";
+import { KnowledgeHub } from "./apps/KnowledgeHub";
+import { Student } from "./apps/Student";
+import { Government } from "./apps/Government";
+import { Emergency } from "./apps/Emergency";
+import { Security } from "./apps/Security";
+import { CloudApp } from "./apps/CloudApp";
 
 export function AppHost({ win }: { win: WindowState }) {
   switch (win.appId) {
@@ -58,6 +64,12 @@ export function AppHost({ win }: { win: WindowState }) {
     case "pdf": return <PdfViewer />;
     case "firewall": return <Firewall />;
     case "ssh": return <SshTerminal />;
+    case "knowledge": return <KnowledgeHub />;
+    case "student": return <Student />;
+    case "government": return <Government />;
+    case "emergency": return <Emergency />;
+    case "security": return <Security />;
+    case "cloud": return <CloudApp />;
     default: return null;
   }
 }
