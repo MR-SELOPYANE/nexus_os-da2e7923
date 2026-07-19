@@ -64,6 +64,12 @@ export function AppHost({ win }: { win: WindowState }) {
     case "pdf": return <PdfViewer />;
     case "firewall": return <Firewall />;
     case "ssh": return <SshTerminal />;
+    case "knowledge": return <KnowledgeHub />;
+    case "student": return <Student />;
+    case "government": return <Government />;
+    case "emergency": return <Emergency />;
+    case "security": return <Security />;
+    case "cloud": return <CloudApp />;
     default: return null;
   }
 }
