@@ -27,6 +27,12 @@ import {
   FileType2,
   Shield,
   ServerCog,
+  GraduationCap,
+  Landmark,
+  Siren,
+  ShieldCheck,
+  Cloud,
+  BookOpen,
   type LucideIcon,
 } from "lucide-react";
 import type { AppId } from "./store";
