@@ -27,6 +27,12 @@ import { ImageEditor } from "./apps/ImageEditor";
 import { PdfViewer } from "./apps/PdfViewer";
 import { Firewall } from "./apps/Firewall";
 import { SshTerminal } from "./apps/SshTerminal";
+import { KnowledgeHub } from "./apps/KnowledgeHub";
+import { Student } from "./apps/Student";
+import { Government } from "./apps/Government";
+import { Emergency } from "./apps/Emergency";
+import { Security } from "./apps/Security";
+import { CloudApp } from "./apps/CloudApp";
 
 export function AppHost({ win }: { win: WindowState }) {
   switch (win.appId) {
