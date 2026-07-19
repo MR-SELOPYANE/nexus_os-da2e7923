@@ -1558,6 +1558,61 @@ export const useOS = create<OSState>()(
         })),
       clearDownloads: () =>
         set((s) => ({ downloads: s.downloads.filter((d) => d.status === "downloading") })),
+
+      // ----- south african / african edition -----
+      sa: {
+        firstBootDone: false,
+        province: "Gauteng",
+        language: "English",
+        aiLanguage: "English",
+        dataSaver: false,
+        ruralMode: false,
+        powerMode: "balanced",
+        performanceMode: "auto",
+        loadSheddingStage: 0,
+        batteryPct: 87,
+        cloudSyncEnabled: false,
+        lastCloudSync: null,
+        emergencyContacts: [],
+        medicalNotes: "",
+        bloodType: "",
+        allergies: "",
+      },
+      updateSA: (patch) => set((s) => ({ sa: { ...s.sa, ...patch } })),
+      addEmergencyContact: (c) =>
+        set((s) => ({
+          sa: {
+            ...s.sa,
+            emergencyContacts: [
+              ...s.sa.emergencyContacts,
+              { ...c, id: `ec${Date.now().toString(36)}` },
+            ],
+          },
+        })),
+      removeEmergencyContact: (id) =>
+        set((s) => ({
+          sa: {
+            ...s.sa,
+            emergencyContacts: s.sa.emergencyContacts.filter((c) => c.id !== id),
+          },
+        })),
+      triggerLoadShedding: (stage) => {
+        set((s) => ({ sa: { ...s.sa, loadSheddingStage: stage } }));
+        if (stage > 0) {
+          get().notify({
+            title: `Load shedding stage ${stage}`,
+            message: "Power Intelligence has enabled battery saver and dimmed the display.",
+          });
+          get().setQuick({ brightness: 55 });
+          get().updateSA({ powerMode: "loadshedding" });
+        }
+      },
+      syncCloud: async () => {
+        get().notify({ title: "NEXUS Cloud", message: "Syncing your files & settings…" });
+        await new Promise((r) => setTimeout(r, 900));
+        set((s) => ({ sa: { ...s.sa, lastCloudSync: Date.now(), cloudSyncEnabled: true } }));
+        get().notify({ title: "NEXUS Cloud", message: "Sync complete." });
+      },
     }),
     {
       name: "nexus-os-v7",
