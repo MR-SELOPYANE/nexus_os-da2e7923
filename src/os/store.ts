@@ -37,7 +37,51 @@ export type AppId =
   | "imageeditor"
   | "pdf"
   | "firewall"
-  | "ssh";
+  | "ssh"
+  | "knowledge"
+  | "student"
+  | "government"
+  | "emergency"
+  | "security"
+  | "cloud";
+
+// ================= South African / African Edition =================
+export type SAProvince =
+  | "Gauteng" | "Western Cape" | "KwaZulu-Natal" | "Eastern Cape"
+  | "Free State" | "Limpopo" | "Mpumalanga" | "North West" | "Northern Cape";
+
+export type SALanguage =
+  | "English" | "isiZulu" | "isiXhosa" | "Afrikaans" | "Sesotho"
+  | "Setswana" | "Sepedi" | "Xitsonga" | "Tshivenda" | "siSwati" | "isiNdebele";
+
+export type PowerMode = "balanced" | "solar" | "loadshedding" | "battery-saver";
+export type PerformanceMode = "auto" | "high" | "balanced" | "eco";
+
+export interface EmergencyContact {
+  id: string;
+  name: string;
+  relation: string;
+  phone: string;
+}
+
+export interface SAState {
+  firstBootDone: boolean;
+  province: SAProvince;
+  language: SALanguage;
+  aiLanguage: SALanguage;
+  dataSaver: boolean;
+  ruralMode: boolean;
+  powerMode: PowerMode;
+  performanceMode: PerformanceMode;
+  loadSheddingStage: 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
+  batteryPct: number;
+  cloudSyncEnabled: boolean;
+  lastCloudSync: number | null;
+  emergencyContacts: EmergencyContact[];
+  medicalNotes: string;
+  bloodType: string;
+  allergies: string;
+}
 
 
 export interface Desktop {
