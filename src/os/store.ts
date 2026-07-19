@@ -588,6 +588,12 @@ const DEFAULT_SIZE: Record<AppId, { w: number; h: number }> = {
   pdf: { w: 720, h: 620 },
   firewall: { w: 640, h: 520 },
   ssh: { w: 720, h: 460 },
+  knowledge: { w: 860, h: 600 },
+  student: { w: 820, h: 580 },
+  government: { w: 820, h: 600 },
+  emergency: { w: 640, h: 580 },
+  security: { w: 780, h: 560 },
+  cloud: { w: 720, h: 540 },
 };
 
 const DEFAULT_PINNED: AppId[] = [
