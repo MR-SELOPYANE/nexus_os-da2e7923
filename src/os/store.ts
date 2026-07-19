@@ -1664,6 +1664,7 @@ export const useOS = create<OSState>()(
         bookmarks: s.bookmarks,
         browserHistory: s.browserHistory,
         downloads: s.downloads,
+        sa: s.sa,
       }),
     }
 
