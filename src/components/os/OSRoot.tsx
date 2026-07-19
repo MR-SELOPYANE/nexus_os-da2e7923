@@ -301,6 +301,8 @@ export function OSRoot() {
       <PerfHudGate />
       <FocusModeBanner />
 
+      {!firstBootDone && <FirstBootWizard />}
+
 
 
 
