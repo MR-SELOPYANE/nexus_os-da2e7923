@@ -16,6 +16,7 @@ import { AccessibilityOverlays, OnScreenKeyboard } from "./AccessibilityOverlays
 import { PerfHUD } from "./PerfHUD";
 import { FocusModeBanner } from "./FocusModeBanner";
 import { BootSequence, ShutdownScreen } from "./BootSequence";
+import { FirstBootWizard } from "./FirstBootWizard";
 import { WALLPAPERS } from "@/os/wallpapers";
 import { sfx } from "@/lib/sounds";
 
