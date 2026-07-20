@@ -125,6 +125,35 @@ export function Widgets() {
         </div>
       )}
 
+      {has("loadshedding") && (
+        <div className="pointer-events-auto rounded-2xl glass-strong p-4 shadow-[var(--shadow-window)]">
+          <p className="mb-2 flex items-center gap-1.5 text-[10px] uppercase tracking-wider text-muted-foreground">
+            <Zap className="size-3.5 text-amber-400" /> Load shedding · {sa.province}
+          </p>
+          {loadshed.active ? (
+            <>
+              <div className="flex items-baseline gap-2">
+                <span className="text-2xl font-bold text-amber-300">Stage {sa.loadSheddingStage}</span>
+              </div>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Next outage in <span className="font-mono text-foreground">{loadshed.label}</span>
+              </p>
+              <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-white/10">
+                <div
+                  className="h-full rounded-full bg-gradient-to-r from-amber-400 to-red-500"
+                  style={{ width: `${Math.max(6, Math.min(100, sa.loadSheddingStage * 12))}%` }}
+                />
+              </div>
+            </>
+          ) : (
+            <>
+              <p className="text-2xl font-semibold text-emerald-400">Stage 0</p>
+              <p className="mt-1 text-xs text-muted-foreground">No outages scheduled 🇿🇦</p>
+            </>
+          )}
+        </div>
+      )}
+
       {has("note") && (
         <div className="pointer-events-auto rounded-2xl glass-strong p-3 shadow-[var(--shadow-window)]">
           <p className="mb-1.5 flex items-center gap-1.5 text-[10px] uppercase tracking-wider text-muted-foreground">
