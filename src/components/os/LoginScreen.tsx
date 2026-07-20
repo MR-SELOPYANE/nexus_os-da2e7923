@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { useOS } from "@/os/store";
 import { WALLPAPERS } from "@/os/wallpapers";
-import { Power, RotateCw, Moon, ArrowLeft, Lock } from "lucide-react";
+import { Power, RotateCw, Moon, ArrowLeft, Lock, Siren, HeartPulse, Phone, X } from "lucide-react";
+import { useT } from "@/lib/i18n";
 
 
 const COLORS = [
