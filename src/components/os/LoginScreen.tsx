@@ -27,6 +27,11 @@ export function LoginScreen() {
   const switchProfile = useOS((s) => s.switchProfile);
   const addProfile = useOS((s) => s.addProfile);
   const removeProfile = useOS((s) => s.removeProfile);
+  const sa = useOS((s) => s.sa);
+  const notify = useOS((s) => s.notify);
+  const t = useT();
+  const [emergencyOpen, setEmergencyOpen] = useState(false);
+  const [sosSending, setSosSending] = useState(false);
 
   const [now, setNow] = useState(() => new Date());
   
