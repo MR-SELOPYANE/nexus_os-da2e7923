@@ -175,7 +175,7 @@ export interface QuickSettings {
   focusMode: FocusMode;
 }
 
-export type WidgetId = "clock" | "weather" | "system" | "events" | "note";
+export type WidgetId = "clock" | "weather" | "system" | "events" | "note" | "loadshedding";
 
 export type ThemeId = "dark" | "light" | "midnight" | "custom";
 
@@ -607,7 +607,7 @@ const DEFAULT_SIZE: Record<AppId, { w: number; h: number }> = {
 const DEFAULT_PINNED: AppId[] = [
   "files", "browser", "assistant", "notes", "terminal", "media", "photos", "settings",
 ];
-const DEFAULT_WIDGETS: WidgetId[] = ["clock", "weather", "system", "events"];
+const DEFAULT_WIDGETS: WidgetId[] = ["clock", "weather", "loadshedding", "system", "events"];
 
 const DEFAULT_SETTINGS: Settings = {
   accent: "0.72 0.13 195",

@@ -10,6 +10,7 @@ const WIDGET_LABELS: Record<WidgetId, string> = {
   system: "System",
   events: "Events",
   note: "Quick note",
+  loadshedding: "Load shedding",
 };
 
 

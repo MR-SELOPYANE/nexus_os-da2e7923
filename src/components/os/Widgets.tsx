@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Cloud, Cpu, MemoryStick, CalendarDays, Sun, CloudRain, Snowflake, StickyNote } from "lucide-react";
+import { Cloud, Cpu, MemoryStick, CalendarDays, Sun, CloudRain, Snowflake, StickyNote, Zap } from "lucide-react";
 import { useOS } from "@/os/store";
 
 const WEATHER_PRESETS = [
@@ -18,6 +18,7 @@ export function Widgets() {
   const processes = useOS((s) => s.processes);
   const events = useOS((s) => s.events);
   const online = useOS((s) => s.network.online);
+  const sa = useOS((s) => s.sa);
   const [now, setNow] = useState(() => new Date());
 
   useEffect(() => {
@@ -37,6 +38,23 @@ export function Widgets() {
 
   const cpu = Math.min(100, processes.reduce((a, p) => a + p.cpu, 0));
   const mem = processes.reduce((a, p) => a + p.memory, 0);
+
+  // Load-shedding: deterministic 2h slot within the current 4h window, keyed by stage + province.
+  const loadshed = useMemo(() => {
+    const stage = sa.loadSheddingStage;
+    if (stage === 0) return { active: false, nextIn: 0, label: "" };
+    const provinceSeed = (sa.province || "").length;
+    const blockHours = Math.max(2, 6 - stage); // higher stage → outages sooner
+    const baseHour = (now.getHours() + provinceSeed) % blockHours;
+    const minsUntil = ((blockHours - baseHour) * 60) - now.getMinutes();
+    const hh = Math.floor(minsUntil / 60);
+    const mm = minsUntil % 60;
+    return {
+      active: true,
+      nextIn: minsUntil,
+      label: `${hh}h ${String(mm).padStart(2, "0")}m`,
+    };
+  }, [sa.loadSheddingStage, sa.province, now]);
 
   // Hide widgets when off, in focus/gaming mode
   if (!visible || focusMode !== "off") return null;
@@ -103,6 +121,35 @@ export function Widgets() {
                 </li>
               ))}
             </ul>
+          )}
+        </div>
+      )}
+
+      {has("loadshedding") && (
+        <div className="pointer-events-auto rounded-2xl glass-strong p-4 shadow-[var(--shadow-window)]">
+          <p className="mb-2 flex items-center gap-1.5 text-[10px] uppercase tracking-wider text-muted-foreground">
+            <Zap className="size-3.5 text-amber-400" /> Load shedding · {sa.province}
+          </p>
+          {loadshed.active ? (
+            <>
+              <div className="flex items-baseline gap-2">
+                <span className="text-2xl font-bold text-amber-300">Stage {sa.loadSheddingStage}</span>
+              </div>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Next outage in <span className="font-mono text-foreground">{loadshed.label}</span>
+              </p>
+              <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-white/10">
+                <div
+                  className="h-full rounded-full bg-gradient-to-r from-amber-400 to-red-500"
+                  style={{ width: `${Math.max(6, Math.min(100, sa.loadSheddingStage * 12))}%` }}
+                />
+              </div>
+            </>
+          ) : (
+            <>
+              <p className="text-2xl font-semibold text-emerald-400">Stage 0</p>
+              <p className="mt-1 text-xs text-muted-foreground">No outages scheduled 🇿🇦</p>
+            </>
           )}
         </div>
       )}
