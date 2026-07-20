@@ -175,7 +175,7 @@ export interface QuickSettings {
   focusMode: FocusMode;
 }
 
-export type WidgetId = "clock" | "weather" | "system" | "events" | "note";
+export type WidgetId = "clock" | "weather" | "system" | "events" | "note" | "loadshedding";
 
 export type ThemeId = "dark" | "light" | "midnight" | "custom";
 
