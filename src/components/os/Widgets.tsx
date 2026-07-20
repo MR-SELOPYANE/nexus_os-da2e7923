@@ -18,6 +18,7 @@ export function Widgets() {
   const processes = useOS((s) => s.processes);
   const events = useOS((s) => s.events);
   const online = useOS((s) => s.network.online);
+  const sa = useOS((s) => s.sa);
   const [now, setNow] = useState(() => new Date());
 
   useEffect(() => {
@@ -37,6 +38,23 @@ export function Widgets() {
 
   const cpu = Math.min(100, processes.reduce((a, p) => a + p.cpu, 0));
   const mem = processes.reduce((a, p) => a + p.memory, 0);
+
+  // Load-shedding: deterministic 2h slot within the current 4h window, keyed by stage + province.
+  const loadshed = useMemo(() => {
+    const stage = sa.loadSheddingStage;
+    if (stage === 0) return { active: false, nextIn: 0, label: "" };
+    const provinceSeed = (sa.province || "").length;
+    const blockHours = Math.max(2, 6 - stage); // higher stage → outages sooner
+    const baseHour = (now.getHours() + provinceSeed) % blockHours;
+    const minsUntil = ((blockHours - baseHour) * 60) - now.getMinutes();
+    const hh = Math.floor(minsUntil / 60);
+    const mm = minsUntil % 60;
+    return {
+      active: true,
+      nextIn: minsUntil,
+      label: `${hh}h ${String(mm).padStart(2, "0")}m`,
+    };
+  }, [sa.loadSheddingStage, sa.province, now]);
 
   // Hide widgets when off, in focus/gaming mode
   if (!visible || focusMode !== "off") return null;
