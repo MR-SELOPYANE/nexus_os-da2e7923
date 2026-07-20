@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Cloud, Cpu, MemoryStick, CalendarDays, Sun, CloudRain, Snowflake, StickyNote } from "lucide-react";
+import { Cloud, Cpu, MemoryStick, CalendarDays, Sun, CloudRain, Snowflake, StickyNote, Zap } from "lucide-react";
 import { useOS } from "@/os/store";
 
 const WEATHER_PRESETS = [
