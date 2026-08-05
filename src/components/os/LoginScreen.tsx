@@ -257,17 +257,6 @@ export function LoginScreen() {
         </div>
       )}
 
-      {/* Emergency panel — reachable without signing in */}
-      <div className="absolute bottom-6 left-6 flex gap-2 text-white">
-        <button
-          onClick={() => setEmergencyOpen(true)}
-          title={t("emergency")}
-          className="flex items-center gap-2 rounded-full bg-red-600/70 px-4 py-2 text-xs font-semibold uppercase tracking-widest backdrop-blur hover:bg-red-600"
-        >
-          <Siren className="size-4" /> {t("emergency")}
-        </button>
-      </div>
-
       {/* Power menu */}
       <div className="absolute bottom-6 right-6 flex gap-2 text-white">
         <button
