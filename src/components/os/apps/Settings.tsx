@@ -60,6 +60,7 @@ const NAV: NavItem[] = [
   { id: "network", label: "Network", icon: Wifi, group: "System" },
   { id: "datetime", label: "Date & Time", icon: ClockIcon, group: "System" },
   { id: "accessibility", label: "Accessibility", icon: Eye, group: "System" },
+  { id: "lock", label: "Lock & Security", icon: Lock, group: "System" },
   { id: "account", label: "Account", icon: User, group: "Account" },
   { id: "about", label: "About", icon: Info, group: "Account" },
   { id: "system", label: "Reset", icon: RotateCcw, group: "Account" },
