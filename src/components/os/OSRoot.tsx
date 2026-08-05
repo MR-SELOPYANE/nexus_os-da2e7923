@@ -289,7 +289,7 @@ export function OSRoot() {
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [loggedIn, openApp, windows, focusWindow, minimizeWindow, activeDesktopId, cycleDesktop, captureScreenshot]);
+  }, [loggedIn, openApp, windows, focusWindow, minimizeWindow, activeDesktopId, cycleDesktop, captureScreenshot, snapWindow, toggleMaximize]);
 
   if (!hydrated) return <div className="h-full w-full bg-background" />;
 
