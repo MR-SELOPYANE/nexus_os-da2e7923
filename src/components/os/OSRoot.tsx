@@ -52,7 +52,6 @@ export function OSRoot() {
   const captureScreenshot = useOS((s) => s.captureScreenshot);
   const snapWindow = useOS((s) => s.snapWindow);
   const toggleMaximize = useOS((s) => s.toggleMaximize);
-  const minimizeWindow = useOS((s) => s.minimizeWindow);
   const firstBootDone = useOS((s) => s.sa.firstBootDone);
   const autoLockMinutes = useOS((s) => s.settings.autoLockMinutes);
   const screensaverEnabled = useOS((s) => s.settings.screensaverEnabled);
