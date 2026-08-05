@@ -84,6 +84,7 @@ export const APPS: AppMeta[] = [
   { id: "emergency", name: "Emergency", icon: Siren, tile: "from-red-600 to-orange-700", showOnDesktop: true },
   { id: "security", name: "AI Security", icon: ShieldCheck, tile: "from-indigo-500 to-fuchsia-700", showOnDesktop: true },
   { id: "cloud", name: "NEXUS Cloud", icon: Cloud, tile: "from-sky-500 to-cyan-700", showOnDesktop: true },
+  { id: "weather", name: "Weather", icon: CloudSun, tile: "from-sky-400 to-indigo-600", showOnDesktop: true },
 ];
 
 export const APP_MAP: Record<AppId, AppMeta> = APPS.reduce(
