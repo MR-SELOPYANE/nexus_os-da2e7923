@@ -43,7 +43,8 @@ export type AppId =
   | "government"
   | "emergency"
   | "security"
-  | "cloud";
+  | "cloud"
+  | "weather";
 
 // ================= South African / African Edition =================
 export type SAProvince =
