@@ -50,14 +50,23 @@ export function OSRoot() {
   const focusWindow = useOS((s) => s.focusWindow);
   const cycleDesktop = useOS((s) => s.cycleDesktop);
   const captureScreenshot = useOS((s) => s.captureScreenshot);
+  const snapWindow = useOS((s) => s.snapWindow);
+  const toggleMaximize = useOS((s) => s.toggleMaximize);
+  const minimizeWindow = useOS((s) => s.minimizeWindow);
   const firstBootDone = useOS((s) => s.sa.firstBootDone);
+  const autoLockMinutes = useOS((s) => s.settings.autoLockMinutes);
+  const screensaverEnabled = useOS((s) => s.settings.screensaverEnabled);
+  const lock = useOS((s) => s.lock);
   const [hydrated, setHydrated] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
   const [menu, setMenu] = useState<{ x: number; y: number } | null>(null);
   const [spotlightOpen, setSpotlightOpen] = useState(false);
   const [hudOpen, setHudOpen] = useState(false);
+  const [screensaver, setScreensaver] = useState(false);
+  const [shortcutsOpen, setShortcutsOpen] = useState(false);
 
   const lastNotifId = useRef<string | null>(null);
+  const lastActivity = useRef<number>(Date.now());
 
   useEffect(() => setHydrated(true), []);
 
