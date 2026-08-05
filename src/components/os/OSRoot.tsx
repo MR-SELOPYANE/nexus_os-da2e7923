@@ -19,6 +19,7 @@ import { BootSequence, ShutdownScreen } from "./BootSequence";
 import { FirstBootWizard } from "./FirstBootWizard";
 import { WALLPAPERS } from "@/os/wallpapers";
 import { sfx } from "@/lib/sounds";
+import { registerServiceWorker } from "@/lib/pwa";
 
 
 function PerfHudGate() {
@@ -27,6 +28,9 @@ function PerfHudGate() {
 }
 
 export function OSRoot() {
+  useEffect(() => {
+    registerServiceWorker();
+  }, []);
   const loggedIn = useOS((s) => s.loggedIn);
   const bootComplete = useOS((s) => s.bootComplete);
   const setBootComplete = useOS((s) => s.setBootComplete);
