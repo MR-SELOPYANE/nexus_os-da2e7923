@@ -296,6 +296,8 @@ export interface Settings {
   theme: ThemeId;
   customTheme: ThemeTokens;
   searchEngine: SearchEngineId;
+  autoLockMinutes: number; // 0 = never
+  screensaverEnabled: boolean;
 }
 
 
@@ -628,6 +630,8 @@ const DEFAULT_SETTINGS: Settings = {
   theme: "dark",
   customTheme: THEME_PRESETS.dark,
   searchEngine: "brave",
+  autoLockMinutes: 0,
+  screensaverEnabled: true,
 };
 
 const DEFAULT_QUICK: QuickSettings = {
