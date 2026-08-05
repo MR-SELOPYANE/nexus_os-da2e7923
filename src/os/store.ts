@@ -43,7 +43,8 @@ export type AppId =
   | "government"
   | "emergency"
   | "security"
-  | "cloud";
+  | "cloud"
+  | "weather";
 
 // ================= South African / African Edition =================
 export type SAProvince =
@@ -295,6 +296,8 @@ export interface Settings {
   theme: ThemeId;
   customTheme: ThemeTokens;
   searchEngine: SearchEngineId;
+  autoLockMinutes: number; // 0 = never
+  screensaverEnabled: boolean;
 }
 
 
@@ -565,6 +568,7 @@ const APP_TITLES: Record<AppId, string> = {
   emergency: "Emergency Mode",
   security: "AI Security Center",
   cloud: "NEXUS Cloud",
+  weather: "Weather",
 };
 
 const DEFAULT_SIZE: Record<AppId, { w: number; h: number }> = {
@@ -602,6 +606,7 @@ const DEFAULT_SIZE: Record<AppId, { w: number; h: number }> = {
   emergency: { w: 640, h: 580 },
   security: { w: 780, h: 560 },
   cloud: { w: 720, h: 540 },
+  weather: { w: 560, h: 600 },
 };
 
 const DEFAULT_PINNED: AppId[] = [
@@ -625,6 +630,8 @@ const DEFAULT_SETTINGS: Settings = {
   theme: "dark",
   customTheme: THEME_PRESETS.dark,
   searchEngine: "brave",
+  autoLockMinutes: 0,
+  screensaverEnabled: true,
 };
 
 const DEFAULT_QUICK: QuickSettings = {
@@ -1616,7 +1623,7 @@ export const useOS = create<OSState>()(
     }),
     {
       name: "nexus-os-v7",
-      version: 5,
+      version: 6,
       migrate: (persisted: unknown, _version: number) => {
         const p = (persisted as { settings?: Partial<Settings>; quick?: Partial<QuickSettings> } | null) ?? {};
         const s = p.settings ?? {};
@@ -1632,6 +1639,8 @@ export const useOS = create<OSState>()(
             theme: s.theme ?? "dark",
             customTheme: s.customTheme ?? THEME_PRESETS.dark,
             searchEngine: s.searchEngine ?? "brave",
+            autoLockMinutes: s.autoLockMinutes ?? 0,
+            screensaverEnabled: s.screensaverEnabled ?? true,
           },
           quick: {
             ...DEFAULT_QUICK,

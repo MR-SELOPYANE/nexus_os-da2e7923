@@ -17,6 +17,8 @@ import { PerfHUD } from "./PerfHUD";
 import { FocusModeBanner } from "./FocusModeBanner";
 import { BootSequence, ShutdownScreen } from "./BootSequence";
 import { FirstBootWizard } from "./FirstBootWizard";
+import { Screensaver } from "./Screensaver";
+import { ShortcutsHelp } from "./ShortcutsHelp";
 import { WALLPAPERS } from "@/os/wallpapers";
 import { sfx } from "@/lib/sounds";
 import { registerServiceWorker } from "@/lib/pwa";
@@ -48,14 +50,22 @@ export function OSRoot() {
   const focusWindow = useOS((s) => s.focusWindow);
   const cycleDesktop = useOS((s) => s.cycleDesktop);
   const captureScreenshot = useOS((s) => s.captureScreenshot);
+  const snapWindow = useOS((s) => s.snapWindow);
+  const toggleMaximize = useOS((s) => s.toggleMaximize);
   const firstBootDone = useOS((s) => s.sa.firstBootDone);
+  const autoLockMinutes = useOS((s) => s.settings.autoLockMinutes);
+  const screensaverEnabled = useOS((s) => s.settings.screensaverEnabled);
+  const lock = useOS((s) => s.lock);
   const [hydrated, setHydrated] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
   const [menu, setMenu] = useState<{ x: number; y: number } | null>(null);
   const [spotlightOpen, setSpotlightOpen] = useState(false);
   const [hudOpen, setHudOpen] = useState(false);
+  const [screensaver, setScreensaver] = useState(false);
+  const [shortcutsOpen, setShortcutsOpen] = useState(false);
 
   const lastNotifId = useRef<string | null>(null);
+  const lastActivity = useRef<number>(Date.now());
 
   useEffect(() => setHydrated(true), []);
 
@@ -123,6 +133,32 @@ export function OSRoot() {
     return () => clearInterval(t);
   }, [loggedIn, tickProcesses]);
 
+  // Auto-lock + screensaver based on inactivity
+  useEffect(() => {
+    if (!loggedIn) return;
+    const tick = () => lastActivity.current = Date.now();
+    const events = ["mousemove", "keydown", "mousedown", "touchstart", "wheel"];
+    events.forEach((e) => window.addEventListener(e, tick, { passive: true }));
+
+    const timer = setInterval(() => {
+      const idleSec = (Date.now() - lastActivity.current) / 1000;
+      const lockMin = autoLockMinutes;
+      // Show screensaver after 2 min idle if enabled and not already locking sooner
+      if (screensaverEnabled && !screensaver && idleSec >= 120 && (lockMin === 0 || idleSec < lockMin * 60)) {
+        setScreensaver(true);
+      }
+      if (lockMin > 0 && idleSec >= lockMin * 60) {
+        lock();
+        setScreensaver(false);
+      }
+    }, 2000);
+
+    return () => {
+      events.forEach((e) => window.removeEventListener(e, tick));
+      clearInterval(timer);
+    };
+  }, [loggedIn, autoLockMinutes, screensaverEnabled, screensaver, lock]);
+
   // Global clipboard capture — listen for copy/cut anywhere in NEXUS
   useEffect(() => {
     if (!loggedIn) return;
@@ -188,6 +224,31 @@ export function OSRoot() {
         openApp("clipboard");
         return;
       }
+      // Keyboard shortcuts cheatsheet: Ctrl + ? (Ctrl+Shift+/)
+      if (e.ctrlKey && (e.key === "?" || (e.shiftKey && e.key === "/"))) {
+        e.preventDefault();
+        setShortcutsOpen((v) => !v);
+        return;
+      }
+      // Window tiling: Meta (Super) + Arrow keys
+      if (e.metaKey && (e.key === "ArrowLeft" || e.key === "ArrowRight" || e.key === "ArrowUp" || e.key === "ArrowDown")) {
+        e.preventDefault();
+        const top = [...windows]
+          .filter((w) => !w.minimized && w.desktopId === activeDesktopId)
+          .sort((a, b) => b.zIndex - a.zIndex)[0];
+        if (!top) return;
+        const screen = { w: window.innerWidth, h: window.innerHeight };
+        if (e.key === "ArrowLeft") snapWindow(top.id, "left", screen);
+        else if (e.key === "ArrowRight") snapWindow(top.id, "right", screen);
+        else if (e.key === "ArrowUp") {
+          if (!top.maximized) toggleMaximize(top.id, screen);
+        } else if (e.key === "ArrowDown") {
+          if (top.maximized) toggleMaximize(top.id, screen);
+          else minimizeWindow(top.id);
+        }
+        return;
+      }
+
 
 
       if (e.ctrlKey && e.shiftKey && e.key === "Escape") {
@@ -228,7 +289,7 @@ export function OSRoot() {
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [loggedIn, openApp, windows, focusWindow, minimizeWindow, activeDesktopId, cycleDesktop, captureScreenshot]);
+  }, [loggedIn, openApp, windows, focusWindow, minimizeWindow, activeDesktopId, cycleDesktop, captureScreenshot, snapWindow, toggleMaximize]);
 
   if (!hydrated) return <div className="h-full w-full bg-background" />;
 
@@ -328,6 +389,9 @@ export function OSRoot() {
           style={{ background: "rgba(255, 170, 70, 0.22)" }}
         />
       )}
+
+      {screensaver && <Screensaver onDismiss={() => setScreensaver(false)} />}
+      {shortcutsOpen && <ShortcutsHelp onClose={() => setShortcutsOpen(false)} />}
 
       <Toaster
         position="top-center"

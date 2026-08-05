@@ -33,6 +33,7 @@ import { Government } from "./apps/Government";
 import { Emergency } from "./apps/Emergency";
 import { Security } from "./apps/Security";
 import { CloudApp } from "./apps/CloudApp";
+import { Weather } from "./apps/Weather";
 
 export function AppHost({ win }: { win: WindowState }) {
   switch (win.appId) {
@@ -70,6 +71,7 @@ export function AppHost({ win }: { win: WindowState }) {
     case "emergency": return <Emergency />;
     case "security": return <Security />;
     case "cloud": return <CloudApp />;
+    case "weather": return <Weather />;
     default: return null;
   }
 }

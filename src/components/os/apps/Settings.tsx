@@ -20,6 +20,7 @@ import {
   Paintbrush,
   Download,
   Upload,
+  Lock,
   type LucideIcon,
 } from "lucide-react";
 
@@ -27,14 +28,15 @@ type SectionId =
   | "personalization"
   | "themes"
   | "wallpaper"
+  | "taskbar"
   | "browser"
   | "display"
   | "sound"
   | "notifications"
   | "network"
   | "datetime"
-  | "taskbar"
   | "accessibility"
+  | "lock"
   | "account"
   | "about"
   | "system";
@@ -58,6 +60,7 @@ const NAV: NavItem[] = [
   { id: "network", label: "Network", icon: Wifi, group: "System" },
   { id: "datetime", label: "Date & Time", icon: ClockIcon, group: "System" },
   { id: "accessibility", label: "Accessibility", icon: Eye, group: "System" },
+  { id: "lock", label: "Lock & Security", icon: Lock, group: "System" },
   { id: "account", label: "Account", icon: User, group: "Account" },
   { id: "about", label: "About", icon: Info, group: "Account" },
   { id: "system", label: "Reset", icon: RotateCcw, group: "Account" },
@@ -393,6 +396,43 @@ export function Settings() {
                 description="Disable window and menu animations."
                 checked={!settings.animationsEnabled}
                 onChange={(v) => update({ animationsEnabled: !v })}
+              />
+            </Panel>
+          )}
+
+          {active === "lock" && (
+            <Panel title="Lock & Security" description="Automatically lock NEXUS and keep it safe.">
+              <Row label="Auto-lock after inactivity">
+                <div className="grid grid-cols-4 gap-2">
+                  {([
+                    { v: 0, label: "Never" },
+                    { v: 1, label: "1 min" },
+                    { v: 5, label: "5 min" },
+                    { v: 15, label: "15 min" },
+                  ] as { v: number; label: string }[]).map((o) => (
+                    <button
+                      key={o.v}
+                      onClick={() => update({ autoLockMinutes: o.v })}
+                      className={`rounded-md border px-2 py-2 text-sm transition-colors ${
+                        settings.autoLockMinutes === o.v
+                          ? "border-primary bg-primary/15 text-foreground"
+                          : "border-border text-muted-foreground hover:bg-white/5"
+                      }`}
+                    >
+                      {o.label}
+                    </button>
+                  ))}
+                </div>
+                <p className="mt-1.5 text-xs text-muted-foreground">
+                  Lock instantly anytime with <kbd className="rounded border border-border bg-black/30 px-1 font-mono">Meta + L</kbd>.
+                </p>
+              </Row>
+              <Toggle
+                label="Screensaver"
+                description="Show a starfield clock when idle before locking."
+                icon={Lock}
+                checked={settings.screensaverEnabled}
+                onChange={(v) => update({ screensaverEnabled: v })}
               />
             </Panel>
           )}
