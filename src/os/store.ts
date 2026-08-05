@@ -1623,7 +1623,7 @@ export const useOS = create<OSState>()(
     }),
     {
       name: "nexus-os-v7",
-      version: 5,
+      version: 6,
       migrate: (persisted: unknown, _version: number) => {
         const p = (persisted as { settings?: Partial<Settings>; quick?: Partial<QuickSettings> } | null) ?? {};
         const s = p.settings ?? {};
@@ -1639,6 +1639,8 @@ export const useOS = create<OSState>()(
             theme: s.theme ?? "dark",
             customTheme: s.customTheme ?? THEME_PRESETS.dark,
             searchEngine: s.searchEngine ?? "brave",
+            autoLockMinutes: s.autoLockMinutes ?? 0,
+            screensaverEnabled: s.screensaverEnabled ?? true,
           },
           quick: {
             ...DEFAULT_QUICK,
