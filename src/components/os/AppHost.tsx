@@ -71,6 +71,7 @@ export function AppHost({ win }: { win: WindowState }) {
     case "emergency": return <Emergency />;
     case "security": return <Security />;
     case "cloud": return <CloudApp />;
+    case "weather": return <Weather />;
     default: return null;
   }
 }
