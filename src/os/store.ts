@@ -566,6 +566,7 @@ const APP_TITLES: Record<AppId, string> = {
   emergency: "Emergency Mode",
   security: "AI Security Center",
   cloud: "NEXUS Cloud",
+  weather: "Weather",
 };
 
 const DEFAULT_SIZE: Record<AppId, { w: number; h: number }> = {
@@ -603,6 +604,7 @@ const DEFAULT_SIZE: Record<AppId, { w: number; h: number }> = {
   emergency: { w: 640, h: 580 },
   security: { w: 780, h: 560 },
   cloud: { w: 720, h: 540 },
+  weather: { w: 560, h: 600 },
 };
 
 const DEFAULT_PINNED: AppId[] = [
