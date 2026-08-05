@@ -17,6 +17,8 @@ import { PerfHUD } from "./PerfHUD";
 import { FocusModeBanner } from "./FocusModeBanner";
 import { BootSequence, ShutdownScreen } from "./BootSequence";
 import { FirstBootWizard } from "./FirstBootWizard";
+import { Screensaver } from "./Screensaver";
+import { ShortcutsHelp } from "./ShortcutsHelp";
 import { WALLPAPERS } from "@/os/wallpapers";
 import { sfx } from "@/lib/sounds";
 import { registerServiceWorker } from "@/lib/pwa";
