@@ -390,6 +390,9 @@ export function OSRoot() {
         />
       )}
 
+      {screensaver && <Screensaver onDismiss={() => setScreensaver(false)} />}
+      {shortcutsOpen && <ShortcutsHelp onClose={() => setShortcutsOpen(false)} />}
+
       <Toaster
         position="top-center"
         theme="dark"
