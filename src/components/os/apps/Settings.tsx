@@ -20,6 +20,7 @@ import {
   Paintbrush,
   Download,
   Upload,
+  Lock,
   type LucideIcon,
 } from "lucide-react";
 
