@@ -400,6 +400,43 @@ export function Settings() {
             </Panel>
           )}
 
+          {active === "lock" && (
+            <Panel title="Lock & Security" description="Automatically lock NEXUS and keep it safe.">
+              <Row label="Auto-lock after inactivity">
+                <div className="grid grid-cols-4 gap-2">
+                  {([
+                    { v: 0, label: "Never" },
+                    { v: 1, label: "1 min" },
+                    { v: 5, label: "5 min" },
+                    { v: 15, label: "15 min" },
+                  ] as { v: number; label: string }[]).map((o) => (
+                    <button
+                      key={o.v}
+                      onClick={() => update({ autoLockMinutes: o.v })}
+                      className={`rounded-md border px-2 py-2 text-sm transition-colors ${
+                        settings.autoLockMinutes === o.v
+                          ? "border-primary bg-primary/15 text-foreground"
+                          : "border-border text-muted-foreground hover:bg-white/5"
+                      }`}
+                    >
+                      {o.label}
+                    </button>
+                  ))}
+                </div>
+                <p className="mt-1.5 text-xs text-muted-foreground">
+                  Lock instantly anytime with <kbd className="rounded border border-border bg-black/30 px-1 font-mono">Meta + L</kbd>.
+                </p>
+              </Row>
+              <Toggle
+                label="Screensaver"
+                description="Show a starfield clock when idle before locking."
+                icon={Lock}
+                checked={settings.screensaverEnabled}
+                onChange={(v) => update({ screensaverEnabled: v })}
+              />
+            </Panel>
+          )}
+
           {active === "account" && (
             <Panel title="Account" description="Your NEXUS profile.">
               <Row label="Display name">
