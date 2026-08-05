@@ -224,6 +224,31 @@ export function OSRoot() {
         openApp("clipboard");
         return;
       }
+      // Keyboard shortcuts cheatsheet: Ctrl + ? (Ctrl+Shift+/)
+      if (e.ctrlKey && (e.key === "?" || (e.shiftKey && e.key === "/"))) {
+        e.preventDefault();
+        setShortcutsOpen((v) => !v);
+        return;
+      }
+      // Window tiling: Meta (Super) + Arrow keys
+      if (e.metaKey && (e.key === "ArrowLeft" || e.key === "ArrowRight" || e.key === "ArrowUp" || e.key === "ArrowDown")) {
+        e.preventDefault();
+        const top = [...windows]
+          .filter((w) => !w.minimized && w.desktopId === activeDesktopId)
+          .sort((a, b) => b.zIndex - a.zIndex)[0];
+        if (!top) return;
+        const screen = { w: window.innerWidth, h: window.innerHeight };
+        if (e.key === "ArrowLeft") snapWindow(top.id, "left", screen);
+        else if (e.key === "ArrowRight") snapWindow(top.id, "right", screen);
+        else if (e.key === "ArrowUp") {
+          if (!top.maximized) toggleMaximize(top.id, screen);
+        } else if (e.key === "ArrowDown") {
+          if (top.maximized) toggleMaximize(top.id, screen);
+          else minimizeWindow(top.id);
+        }
+        return;
+      }
+
 
 
       if (e.ctrlKey && e.shiftKey && e.key === "Escape") {
