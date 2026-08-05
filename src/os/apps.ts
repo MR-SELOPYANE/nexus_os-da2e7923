@@ -33,6 +33,7 @@ import {
   ShieldCheck,
   Cloud,
   BookOpen,
+  CloudSun,
   type LucideIcon,
 } from "lucide-react";
 import type { AppId } from "./store";
