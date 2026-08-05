@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useOS } from "@/os/store";
 import { WALLPAPERS } from "@/os/wallpapers";
-import { Power, RotateCw, Moon, ArrowLeft, Lock, Siren, HeartPulse, Phone, X } from "lucide-react";
+import { Power, RotateCw, Moon, ArrowLeft, Lock } from "lucide-react";
 import { useT } from "@/lib/i18n";
 
 
@@ -27,11 +27,7 @@ export function LoginScreen() {
   const switchProfile = useOS((s) => s.switchProfile);
   const addProfile = useOS((s) => s.addProfile);
   const removeProfile = useOS((s) => s.removeProfile);
-  const sa = useOS((s) => s.sa);
-  const notify = useOS((s) => s.notify);
   const t = useT();
-  const [emergencyOpen, setEmergencyOpen] = useState(false);
-  const [sosSending, setSosSending] = useState(false);
 
   const [now, setNow] = useState(() => new Date());
   
@@ -281,108 +277,6 @@ export function LoginScreen() {
         </button>
       </div>
 
-      {emergencyOpen && (
-        <div
-          className="absolute inset-0 z-50 flex items-center justify-center bg-black/70 p-6 backdrop-blur"
-          onClick={() => setEmergencyOpen(false)}
-        >
-          <div
-            className="relative w-full max-w-md rounded-2xl border border-red-500/40 bg-slate-900/95 p-5 text-white shadow-2xl"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <button
-              onClick={() => setEmergencyOpen(false)}
-              className="absolute right-3 top-3 rounded-full p-1 text-white/60 hover:bg-white/10 hover:text-white"
-              aria-label="Close"
-            >
-              <X className="size-4" />
-            </button>
-            <div className="mb-3 flex items-center gap-2">
-              <Siren className="size-6 text-red-400" />
-              <div>
-                <p className="text-lg font-semibold">{t("emergency")}</p>
-                <p className="text-xs text-white/60">
-                  Accessible without signing in · Works offline
-                </p>
-              </div>
-            </div>
-
-            <button
-              onClick={() => {
-                setSosSending(true);
-                notify({
-                  title: "🚨 SOS activated",
-                  message: `Location shared with ${sa.emergencyContacts.length} contact(s) and ER24.`,
-                });
-                setTimeout(() => setSosSending(false), 4000);
-              }}
-              className={`w-full rounded-xl border-2 border-red-500 px-6 py-5 text-base font-bold uppercase tracking-widest transition ${
-                sosSending
-                  ? "animate-pulse bg-red-600 text-white"
-                  : "bg-red-600/25 text-red-100 hover:bg-red-600/50"
-              }`}
-            >
-              {sosSending ? "Sending SOS…" : `🚨 ${t("sos")}`}
-            </button>
-
-            <div className="mt-4 grid grid-cols-3 gap-2 text-xs">
-              {[
-                { name: "SAPS", n: "10111" },
-                { name: "ER24", n: "084 124" },
-                { name: "Fire", n: "10177" },
-              ].map((c) => (
-                <a
-                  key={c.n}
-                  href={`tel:${c.n}`}
-                  className="flex flex-col items-center gap-1 rounded-lg border border-white/10 bg-white/5 p-2 hover:bg-white/10"
-                >
-                  <Phone className="size-4 text-red-400" />
-                  <div className="font-medium">{c.name}</div>
-                  <div className="font-mono text-[10px] text-white/60">{c.n}</div>
-                </a>
-              ))}
-            </div>
-
-            <div className="mt-4 rounded-lg border border-white/10 bg-white/5 p-3 text-xs">
-              <p className="mb-1 flex items-center gap-1.5 font-semibold text-red-300">
-                <HeartPulse className="size-3.5" /> {t("medicalId")}
-              </p>
-              <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-white/80">
-                <span className="text-white/50">Blood type</span>
-                <span className="font-mono">{sa.bloodType || "—"}</span>
-                <span className="text-white/50">Allergies</span>
-                <span className="truncate">{sa.allergies || "—"}</span>
-              </div>
-              {sa.medicalNotes && (
-                <p className="mt-2 whitespace-pre-wrap border-t border-white/10 pt-2 text-white/70">
-                  {sa.medicalNotes}
-                </p>
-              )}
-              {sa.emergencyContacts.length > 0 && (
-                <div className="mt-2 border-t border-white/10 pt-2">
-                  <p className="mb-1 text-white/50">Emergency contacts</p>
-                  <ul className="space-y-0.5">
-                    {sa.emergencyContacts.slice(0, 3).map((c) => (
-                      <li key={c.id} className="flex items-center justify-between">
-                        <span>
-                          {c.name}{" "}
-                          <span className="text-white/40">· {c.relation}</span>
-                        </span>
-                        <a
-                          href={`tel:${c.phone}`}
-                          className="font-mono text-primary"
-                        >
-                          {c.phone}
-                        </a>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
