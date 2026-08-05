@@ -133,6 +133,32 @@ export function OSRoot() {
     return () => clearInterval(t);
   }, [loggedIn, tickProcesses]);
 
+  // Auto-lock + screensaver based on inactivity
+  useEffect(() => {
+    if (!loggedIn) return;
+    const tick = () => lastActivity.current = Date.now();
+    const events = ["mousemove", "keydown", "mousedown", "touchstart", "wheel"];
+    events.forEach((e) => window.addEventListener(e, tick, { passive: true }));
+
+    const timer = setInterval(() => {
+      const idleSec = (Date.now() - lastActivity.current) / 1000;
+      const lockMin = autoLockMinutes;
+      // Show screensaver after 2 min idle if enabled and not already locking sooner
+      if (screensaverEnabled && !screensaver && idleSec >= 120 && (lockMin === 0 || idleSec < lockMin * 60)) {
+        setScreensaver(true);
+      }
+      if (lockMin > 0 && idleSec >= lockMin * 60) {
+        lock();
+        setScreensaver(false);
+      }
+    }, 2000);
+
+    return () => {
+      events.forEach((e) => window.removeEventListener(e, tick));
+      clearInterval(timer);
+    };
+  }, [loggedIn, autoLockMinutes, screensaverEnabled, screensaver, lock]);
+
   // Global clipboard capture — listen for copy/cut anywhere in NEXUS
   useEffect(() => {
     if (!loggedIn) return;
