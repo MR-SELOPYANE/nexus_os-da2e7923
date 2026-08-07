@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { useOS } from "@/os/store";
-import { getCommand, listCommands } from "@/os/commands";
+import { listCommands } from "@/os/commands";
+import { execLine } from "@/os/shell";
+
 
 interface Line {
   type: "in" | "out" | "err";
@@ -33,25 +35,15 @@ export function Terminal() {
     setHistory((h) => [...h, { type: "in", text: `${prompt} ${cmd}` }]);
     if (!cmd) return;
     setPast((p) => [...p, cmd]);
-    const [name, ...args] = cmd.split(/\s+/);
-    if (name === "clear") return setHistory([]);
-    const c = getCommand(name);
-    if (!c) {
-      print(`${name}: command not found`, "err");
-      return;
-    }
-    // build fresh ctx with the latest store snapshot
-    void c.run({
+    void execLine(cmd, {
       cwd,
       setCwd,
-      store: useOS.getState(),
+      getStore: () => useOS.getState(),
       print,
-      args,
-      raw: cmd,
+      clear: () => setHistory([]),
     });
   };
 
-  void listCommands;
 
   const onKey = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") {

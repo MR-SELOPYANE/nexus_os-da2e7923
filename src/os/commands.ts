@@ -15,6 +15,8 @@ export interface CommandContext {
   print: (text: string, kind?: "out" | "err") => void;
   args: string[];
   raw: string;
+  /** Piped input from a previous command in the pipeline, if any. */
+  stdin?: string;
 }
 
 export interface Command {
@@ -509,3 +511,6 @@ registerCommand({
     );
   },
 });
+
+// Real GNU/Linux userland commands (side-effect registration).
+import "./commands-unix";
