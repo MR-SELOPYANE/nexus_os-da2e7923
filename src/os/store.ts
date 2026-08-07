@@ -44,7 +44,10 @@ export type AppId =
   | "emergency"
   | "security"
   | "cloud"
-  | "weather";
+  | "weather"
+  | "calendar"
+  | "wallet"
+  | "games";
 
 // ================= South African / African Edition =================
 export type SAProvince =
@@ -569,6 +572,9 @@ const APP_TITLES: Record<AppId, string> = {
   security: "AI Security Center",
   cloud: "NEXUS Cloud",
   weather: "Weather",
+  calendar: "Calendar",
+  wallet: "Wallet",
+  games: "Games",
 };
 
 const DEFAULT_SIZE: Record<AppId, { w: number; h: number }> = {
@@ -607,6 +613,9 @@ const DEFAULT_SIZE: Record<AppId, { w: number; h: number }> = {
   security: { w: 780, h: 560 },
   cloud: { w: 720, h: 540 },
   weather: { w: 560, h: 600 },
+  calendar: { w: 860, h: 580 },
+  wallet: { w: 820, h: 580 },
+  games: { w: 520, h: 620 },
 };
 
 const DEFAULT_PINNED: AppId[] = [

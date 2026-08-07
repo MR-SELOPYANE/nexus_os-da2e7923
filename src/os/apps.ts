@@ -34,6 +34,9 @@ import {
   Cloud,
   BookOpen,
   CloudSun,
+  CalendarRange,
+  Wallet as WalletIcon,
+  Gamepad2,
   type LucideIcon,
 } from "lucide-react";
 import type { AppId } from "./store";
@@ -85,6 +88,9 @@ export const APPS: AppMeta[] = [
   { id: "security", name: "AI Security", icon: ShieldCheck, tile: "from-indigo-500 to-fuchsia-700", showOnDesktop: true },
   { id: "cloud", name: "NEXUS Cloud", icon: Cloud, tile: "from-sky-500 to-cyan-700", showOnDesktop: true },
   { id: "weather", name: "Weather", icon: CloudSun, tile: "from-sky-400 to-indigo-600", showOnDesktop: true },
+  { id: "calendar", name: "Calendar", icon: CalendarRange, tile: "from-rose-400 to-pink-600", showOnDesktop: true },
+  { id: "wallet", name: "Wallet", icon: WalletIcon, tile: "from-emerald-400 to-teal-600", showOnDesktop: true },
+  { id: "games", name: "Games", icon: Gamepad2, tile: "from-violet-500 to-fuchsia-700", showOnDesktop: true },
 ];
 
 export const APP_MAP: Record<AppId, AppMeta> = APPS.reduce(
