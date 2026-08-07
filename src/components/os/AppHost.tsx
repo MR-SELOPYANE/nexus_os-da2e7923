@@ -34,6 +34,9 @@ import { Emergency } from "./apps/Emergency";
 import { Security } from "./apps/Security";
 import { CloudApp } from "./apps/CloudApp";
 import { Weather } from "./apps/Weather";
+import { Calendar } from "./apps/Calendar";
+import { Wallet } from "./apps/Wallet";
+import { Games } from "./apps/Games";
 
 export function AppHost({ win }: { win: WindowState }) {
   switch (win.appId) {
@@ -72,6 +75,9 @@ export function AppHost({ win }: { win: WindowState }) {
     case "security": return <Security />;
     case "cloud": return <CloudApp />;
     case "weather": return <Weather />;
+    case "calendar": return <Calendar />;
+    case "wallet": return <Wallet />;
+    case "games": return <Games />;
     default: return null;
   }
 }
