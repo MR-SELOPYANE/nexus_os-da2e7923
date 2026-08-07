@@ -237,13 +237,13 @@ registerCommand({
     const [set1, set2] = ops;
     if (!set1) return ctx.print("usage: tr [-d] SET1 [SET2]", "err");
     const data = ctx.stdin ?? "";
-    const map = (ch: string) => {
+    const map = (ch: string): string => {
       const i = set1.indexOf(ch);
       if (i === -1) return ch;
       if (del) return "";
       return set2 ? set2[Math.min(i, set2.length - 1)] : ch;
     };
-    ctx.print(Array.from(data).map(map).join(""));
+    ctx.print(Array.from(data as string).map((ch) => map(ch)).join(""));
   },
 });
 
@@ -748,6 +748,7 @@ registerCommand({
   description: "Close the terminal session",
   run: ({ store, print }) => {
     print("logout");
-    setTimeout(() => store.closeApp?.("terminal"), 200);
+    const w = store.windows.find((x) => x.appId === "terminal");
+    if (w) setTimeout(() => store.closeWindow(w.id), 200);
   },
 });
