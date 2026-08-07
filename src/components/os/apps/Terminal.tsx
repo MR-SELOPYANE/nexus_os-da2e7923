@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { useOS } from "@/os/store";
-import { getCommand, listCommands } from "@/os/commands";
+import { listCommands } from "@/os/commands";
+import { execLine } from "@/os/shell";
+
 
 interface Line {
   type: "in" | "out" | "err";
