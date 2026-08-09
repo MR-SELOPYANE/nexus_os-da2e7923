@@ -1,0 +1,14 @@
+[Unit]
+Description=NEXUS OS local shell server
+After=network.target
+Before=nexus-session.service
+
+[Service]
+Type=simple
+User=nexus
+ExecStart=/usr/bin/node /opt/nexus/server.mjs
+Restart=always
+RestartSec=2
+
+[Install]
+WantedBy=multi-user.target

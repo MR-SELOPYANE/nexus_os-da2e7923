@@ -1,0 +1,36 @@
+#!/bin/sh
+# Configure the NEXUS session inside the live chroot.
+set -e
+
+# Dedicated unprivileged session user
+if ! id nexus >/dev/null 2>&1; then
+  useradd -m -s /bin/bash -G video,render,audio,input,seat nexus
+  passwd -d nexus
+fi
+
+# Autologin on tty1 -> nexus-session unit takes over the display
+mkdir -p /etc/systemd/system/getty@tty1.service.d
+cat > /etc/systemd/system/getty@tty1.service.d/autologin.conf <<'EOF'
+[Service]
+ExecStart=
+ExecStart=-/sbin/agetty --autologin nexus --noclear %I $TERM
+EOF
+
+chown -R nexus:nexus /opt/nexus
+chmod +x /opt/nexus/session.sh
+
+systemctl enable seatd.service || true
+systemctl enable nexus-server.service
+systemctl enable nexus-session.service
+systemctl set-default graphical.target || true
+
+# Branding
+echo "NEXUS OS (African Edition)" > /etc/issue.net
+cat > /etc/os-release <<'EOF'
+PRETTY_NAME="NEXUS OS"
+NAME="NEXUS OS"
+ID=nexus
+ID_LIKE=debian
+VERSION_ID="1.0"
+HOME_URL="https://lovable.dev/"
+EOF
