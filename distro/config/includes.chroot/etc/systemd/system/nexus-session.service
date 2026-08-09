@@ -1,0 +1,23 @@
+[Unit]
+Description=NEXUS OS graphical session (kiosk)
+After=nexus-server.service seatd.service systemd-user-sessions.service
+Wants=nexus-server.service
+Conflicts=getty@tty1.service
+
+[Service]
+Type=simple
+User=nexus
+PAMName=login
+TTYPath=/dev/tty1
+TTYReset=yes
+TTYVHangup=yes
+StandardInput=tty-fail
+StandardOutput=journal
+Environment=XDG_RUNTIME_DIR=/run/user/1000
+Environment=XDG_SESSION_TYPE=wayland
+ExecStart=/opt/nexus/session.sh
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=graphical.target
