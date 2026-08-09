@@ -3,7 +3,7 @@
  * Everything here operates on the virtual filesystem in the OS store and
  * supports stdin (from pipes) the way the real coreutils do.
  */
-import { registerCommand, type CommandContext } from "./commands";
+import { registerCommand, type CommandContext } from "./registry";
 import { resolvePath, resolveRelative, isFolder, isFile, baseName, parentPath } from "./fs";
 import type { FSNode, FolderNode } from "./fs";
 

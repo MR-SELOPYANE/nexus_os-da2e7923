@@ -2,7 +2,7 @@
  * A small POSIX-ish shell: quoting, variable expansion, aliases, pipes,
  * output redirection and `&&` / `||` / `;` command chaining.
  */
-import { getCommand } from "./commands";
+import { getCommand } from "./registry";
 import { ENV, ALIASES } from "./commands-unix";
 import { resolveRelative, resolvePath, isFile } from "./fs";
 import type { useOS } from "./store";
