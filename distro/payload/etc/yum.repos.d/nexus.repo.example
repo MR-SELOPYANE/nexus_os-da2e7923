@@ -1,0 +1,9 @@
+# NEXUS OS update channel — copy to /etc/yum.repos.d/nexus.repo and point
+# baseurl at the repo you publish nexus-shell RPMs to (createrepo_c output).
+[nexus]
+name=NEXUS OS $releasever - $basearch
+baseurl=https://updates.example.org/nexus/f$releasever/$basearch/
+enabled=1
+gpgcheck=0
+metadata_expire=6h
+skip_if_unavailable=1
