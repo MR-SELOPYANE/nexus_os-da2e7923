@@ -1,0 +1,9 @@
+[Unit]
+Description=NEXUS OS update channel
+After=network-online.target
+Wants=network-online.target
+ConditionPathExists=/etc/yum.repos.d/nexus.repo
+
+[Service]
+Type=oneshot
+ExecStart=/opt/nexus/update.sh
