@@ -20,22 +20,26 @@ for bin in livemedia-creator rpmbuild createrepo_c; do
 done
 
 # 1. App bundle -------------------------------------------------------------
-APP_DIST=""
-for candidate in "$ROOT/dist/client" "$ROOT/.output/public" "$ROOT/dist"; do
-  [ -d "$candidate" ] && APP_DIST="$candidate" && break
-done
-[ -n "$APP_DIST" ] || { echo "ERROR: no build output found. Run 'bun run build' first." >&2; exit 1; }
-echo ">> using app bundle: $APP_DIST"
+# The ISO ships BOTH halves of the build: dist/client (static assets) and
+# dist/server (SSR + server functions), served on-device by payload server.mjs.
+CLIENT_DIST="$ROOT/dist/client"
+SERVER_DIST="$ROOT/dist/server"
+[ -d "$CLIENT_DIST" ] || { echo "ERROR: $CLIENT_DIST missing. Run 'bun run build' first." >&2; exit 1; }
+[ -d "$SERVER_DIST" ] || { echo "ERROR: $SERVER_DIST missing. Run 'bun run build' first." >&2; exit 1; }
+[ -f "$SERVER_DIST/index.mjs" ] || { echo "ERROR: $SERVER_DIST/index.mjs missing." >&2; exit 1; }
+echo ">> using app bundle: $CLIENT_DIST + $SERVER_DIST"
 
 # 2. Package the shell + units as an RPM -----------------------------------
 rm -rf "$WORK"; mkdir -p "$WORK"/{BUILD,RPMS,SOURCES,SPECS,buildroot} "$OUT"
 BR="$WORK/buildroot"
-mkdir -p "$BR/opt/nexus/app"
+mkdir -p "$BR/opt/nexus/app/client" "$BR/opt/nexus/app/server"
 cp -a "$HERE/payload/opt/nexus/." "$BR/opt/nexus/"
-cp -a "$APP_DIST/." "$BR/opt/nexus/app/"
+cp -a "$CLIENT_DIST/." "$BR/opt/nexus/app/client/"
+cp -a "$SERVER_DIST/." "$BR/opt/nexus/app/server/"
 mkdir -p "$BR/etc/systemd/system"
 cp -a "$HERE/payload/etc/systemd/system/." "$BR/etc/systemd/system/"
 chmod +x "$BR/opt/nexus/session.sh"
+
 
 cat > "$WORK/SPECS/nexus-shell.spec" <<EOF
 Name:           nexus-shell
