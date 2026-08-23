@@ -51,11 +51,14 @@ Or write to USB: `sudo dd if=nexus-os-x86_64.iso of=/dev/sdX bs=4M status=progre
 
 ## Notes / limits
 
-- Server functions that need cloud APIs (AI assistant, web proxy, search) require
-  network; offline the shell still boots thanks to the service worker cache.
+- The on-device server (`/opt/nexus/server.mjs`) runs the **full** build — SSR plus
+  server functions — by adapting the bundle's fetch handler to Node's http server.
+  Verified against a real `bun run build` output (`dist/client` + `dist/server`).
+- Server functions that call cloud APIs (AI assistant, web proxy, search) still need
+  network; offline the shell boots fine thanks to the service worker cache.
+- Requires Node 20+ on the image (Fedora 41 ships Node 22) for `Request`/`Response`
+  and `Readable.toWeb`.
 - SELinux stays enforcing; the kiosk runs as the unprivileged `nexus` user under `cage`.
-- The bundled server serves the **client** build with SPA fallback. For the full
-  server-function runtime on-device, swap `server.mjs` for a Node build of the
-  TanStack server output and repoint the systemd unit.
 - Installer (persistent install to disk) is not included yet — add `anaconda` +
   `anaconda-live` to the package list and a branding module for a fully installable distro.
+
