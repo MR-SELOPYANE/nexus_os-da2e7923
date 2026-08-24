@@ -5,10 +5,18 @@
 //   /opt/nexus/app/server/index.mjs   fetch handler
 import { createServer } from 'node:http';
 import { spawn } from 'node:child_process';
-import { createReadStream, existsSync, statSync, readFileSync } from 'node:fs';
+import {
+  createReadStream,
+  existsSync,
+  statSync,
+  readFileSync,
+  mkdtempSync,
+  rmSync,
+} from 'node:fs';
 import { extname, join, normalize, dirname } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { Readable } from 'node:stream';
+import { tmpdir, hostname, release, userInfo } from 'node:os';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const APP = process.env.NEXUS_APP || join(HERE, 'app');
