@@ -12,7 +12,7 @@ xconfig --startxonboot
 zerombr
 clearpart --all
 part / --size 8192 --fstype ext4
-services --enabled=NetworkManager,nexus-server,nexus-session,seatd
+services --enabled=NetworkManager,nexus-server,nexus-session,seatd,nexus-update.timer
 shutdown
 
 # Fedora mirrors + the local repo holding the nexus-shell RPM built by build-iso.sh
@@ -42,6 +42,10 @@ plymouth-system-theme
 curl
 ca-certificates
 xdg-utils
+sudo
+anaconda
+anaconda-live
+anaconda-widgets
 nexus-shell
 -@dial-up
 -@input-methods
@@ -66,9 +70,17 @@ ExecStart=-/sbin/agetty --autologin nexus --noclear %I $TERM
 EOF
 
 chown -R nexus:nexus /opt/nexus
-chmod +x /opt/nexus/session.sh
+chmod +x /opt/nexus/session.sh /opt/nexus/install.sh /opt/nexus/update.sh
+
+# The kiosk user may launch exactly one privileged command: the disk installer.
+cat > /etc/sudoers.d/nexus-install <<'EOF'
+nexus ALL=(root) NOPASSWD: /opt/nexus/install.sh
+EOF
+chmod 0440 /etc/sudoers.d/nexus-install
+ln -sf /opt/nexus/install.sh /usr/bin/nexus-install
 
 systemctl enable nexus-server.service nexus-session.service
+systemctl enable nexus-update.timer || true
 systemctl enable seatd.service || true
 systemctl set-default graphical.target
 

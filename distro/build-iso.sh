@@ -36,9 +36,10 @@ mkdir -p "$BR/opt/nexus/app/client" "$BR/opt/nexus/app/server"
 cp -a "$HERE/payload/opt/nexus/." "$BR/opt/nexus/"
 cp -a "$CLIENT_DIST/." "$BR/opt/nexus/app/client/"
 cp -a "$SERVER_DIST/." "$BR/opt/nexus/app/server/"
-mkdir -p "$BR/etc/systemd/system"
+mkdir -p "$BR/etc/systemd/system" "$BR/etc/yum.repos.d"
 cp -a "$HERE/payload/etc/systemd/system/." "$BR/etc/systemd/system/"
-chmod +x "$BR/opt/nexus/session.sh"
+cp -a "$HERE/payload/etc/yum.repos.d/." "$BR/etc/yum.repos.d/"
+chmod +x "$BR/opt/nexus/session.sh" "$BR/opt/nexus/install.sh" "$BR/opt/nexus/update.sh"
 
 
 cat > "$WORK/SPECS/nexus-shell.spec" <<EOF
@@ -48,7 +49,7 @@ Release:        1%{?dist}
 Summary:        NEXUS OS desktop shell (kiosk session)
 License:        MIT
 BuildArch:      noarch
-Requires:       nodejs, chromium, cage, seatd, curl
+Requires:       nodejs, chromium, cage, seatd, curl, sudo
 %description
 The NEXUS OS graphical shell served locally and rendered full-screen in a kiosk browser.
 %install
@@ -58,6 +59,9 @@ cp -a $BR/. %{buildroot}/
 /opt/nexus
 /etc/systemd/system/nexus-server.service
 /etc/systemd/system/nexus-session.service
+/etc/systemd/system/nexus-update.service
+/etc/systemd/system/nexus-update.timer
+/etc/yum.repos.d/nexus.repo.example
 %changelog
 * Mon Aug 10 2026 NEXUS <root@nexus> - 1.0-1
 - Fedora base

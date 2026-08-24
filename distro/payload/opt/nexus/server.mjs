@@ -4,6 +4,7 @@
 //   /opt/nexus/app/client/**   static assets
 //   /opt/nexus/app/server/index.mjs   fetch handler
 import { createServer } from 'node:http';
+import { spawn } from 'node:child_process';
 import { createReadStream, existsSync, statSync, readFileSync } from 'node:fs';
 import { extname, join, normalize, dirname } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
@@ -87,6 +88,23 @@ async function send(res, response) {
 createServer(async (req, res) => {
   try {
     const url = new URL(req.url || '/', `http://${HOST}:${PORT}`);
+
+    // Device-local control endpoints (loopback callers only).
+    if (url.pathname === '/nexus/install' && req.method === 'POST') {
+      const remote = req.socket.remoteAddress || '';
+      if (!/^(::1|::ffff:127\.|127\.)/.test(remote)) {
+        res.writeHead(403, { 'content-type': 'text/plain' });
+        return res.end('loopback only');
+      }
+      const child = spawn('/opt/nexus/install.sh', [], {
+        detached: true,
+        stdio: 'ignore',
+      });
+      child.unref();
+      res.writeHead(202, { 'content-type': 'application/json' });
+      return res.end(JSON.stringify({ started: true }));
+    }
+
     const file = resolveStatic(url.pathname);
     if (file) {
       res.writeHead(200, {

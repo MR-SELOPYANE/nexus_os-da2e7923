@@ -49,6 +49,30 @@ Or write to USB: `sudo dd if=nexus-os-x86_64.iso of=/dev/sdX bs=4M status=progre
   is copied in at build time)
 - `payload/etc/systemd/system/` — `nexus-server.service`, `nexus-session.service`
 
+## Install to disk
+
+The live image ships Anaconda (`anaconda` + `anaconda-live`). From the running
+system you can start a persistent install in three ways:
+
+- run `nexus-install` from a TTY (symlink to `/opt/nexus/install.sh`)
+- `POST http://127.0.0.1:8080/nexus/install` from the shell (loopback only)
+- `sudo /opt/nexus/install.sh`
+
+The `nexus` user has a single sudoers exception (`/etc/sudoers.d/nexus-install`)
+allowing exactly that script — nothing else. The installer runs in its own Cage
+compositor on top of the kiosk, branded as "NEXUS OS 1.0".
+
+## Update channel
+
+`nexus-update.timer` runs `/opt/nexus/update.sh` 10 minutes after boot and daily
+after that. It upgrades the `nexus-shell` RPM from the channel repo, applies
+security-only updates for the base system, and restarts the shell services only
+when the shell version actually changed.
+
+To enable it, publish `nexus-shell` RPMs with `createrepo_c` and copy
+`/etc/yum.repos.d/nexus.repo.example` to `/etc/yum.repos.d/nexus.repo` with
+`baseurl` pointed at that repo. Without that file the timer exits cleanly.
+
 ## Notes / limits
 
 - The on-device server (`/opt/nexus/server.mjs`) runs the **full** build — SSR plus
@@ -59,6 +83,4 @@ Or write to USB: `sudo dd if=nexus-os-x86_64.iso of=/dev/sdX bs=4M status=progre
 - Requires Node 20+ on the image (Fedora 41 ships Node 22) for `Request`/`Response`
   and `Readable.toWeb`.
 - SELinux stays enforcing; the kiosk runs as the unprivileged `nexus` user under `cage`.
-- Installer (persistent install to disk) is not included yet — add `anaconda` +
-  `anaconda-live` to the package list and a branding module for a fully installable distro.
 
