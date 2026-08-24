@@ -158,6 +158,7 @@ export function Terminal() {
       }
     } else if (e.key === "Tab") {
       e.preventDefault();
+      if (useNative) return; // the real shell owns completion
       const matches = listCommands().filter((c) => c.name.startsWith(input));
       if (matches.length === 1) setInput(matches[0].name + " ");
       else if (matches.length > 1) print(matches.map((m) => m.name).join("  "));
@@ -189,12 +190,14 @@ export function Terminal() {
           ref={inputRef}
           autoFocus
           value={input}
+          disabled={busy}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={onKey}
           spellCheck={false}
-          className="flex-1 bg-transparent text-zinc-100 caret-primary outline-none"
+          className="flex-1 bg-transparent text-zinc-100 caret-primary outline-none disabled:opacity-60"
         />
       </div>
+      {busy && <div className="text-zinc-500">…running</div>}
       <div ref={endRef} />
     </div>
   );
