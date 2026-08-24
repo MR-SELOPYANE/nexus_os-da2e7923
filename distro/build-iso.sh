@@ -49,7 +49,7 @@ Release:        1%{?dist}
 Summary:        NEXUS OS desktop shell (kiosk session)
 License:        MIT
 BuildArch:      noarch
-Requires:       nodejs, chromium, cage, seatd, curl
+Requires:       nodejs, chromium, cage, seatd, curl, sudo
 %description
 The NEXUS OS graphical shell served locally and rendered full-screen in a kiosk browser.
 %install
