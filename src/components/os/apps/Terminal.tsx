@@ -2,7 +2,12 @@ import { useEffect, useRef, useState } from "react";
 import { useOS } from "@/os/store";
 import { listCommands } from "@/os/commands";
 import { execLine } from "@/os/shell";
-
+import {
+  detectNativeShell,
+  resetNativeProbe,
+  runNative,
+  type NativeInfo,
+} from "@/os/native-shell";
 
 interface Line {
   type: "in" | "out" | "err";
@@ -18,6 +23,9 @@ export function Terminal() {
   const [input, setInput] = useState("");
   const [past, setPast] = useState<string[]>([]);
   const [pastIdx, setPastIdx] = useState(-1);
+  const [native, setNative] = useState<NativeInfo | null>(null);
+  const [useNative, setUseNative] = useState(false);
+  const [busy, setBusy] = useState(false);
   const endRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -25,16 +33,96 @@ export function Terminal() {
     endRef.current?.scrollIntoView();
   }, [history]);
 
-  const prompt = `${store.settings.username}@nexus:${cwd}$`;
+  // Detect a real shell on the device (only present on the booted NEXUS OS).
+  useEffect(() => {
+    let alive = true;
+    void detectNativeShell().then((info) => {
+      if (!alive) return;
+      setNative(info);
+      if (info.available) {
+        setUseNative(true);
+        setCwd(info.home || "/home/nexus");
+        setHistory((h) => [
+          ...h,
+          {
+            type: "out",
+            text: `real shell detected: ${info.shell || "bash"} on ${info.os || "Linux"} (${info.kernel || "kernel"})\nrunning real Linux commands — 'native off' switches back to the simulated userland`,
+          },
+        ]);
+      }
+    });
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  const host = useNative && native?.host ? native.host : "nexus";
+  const user = useNative && native?.user ? native.user : store.settings.username;
+  const prompt = `${user}@${host}:${cwd}${useNative && user === "root" ? "#" : "$"}`;
 
   const print = (text: string, kind: "out" | "err" = "out") =>
     setHistory((h) => [...h, { type: kind, text }]);
+
+  const runRealShell = async (cmd: string) => {
+    setBusy(true);
+    try {
+      const res = await runNative(cmd, cwd);
+      if (res.stdout) print(res.stdout.replace(/\n$/, ""));
+      if (res.stderr) print(res.stderr.replace(/\n$/, ""), "err");
+      if (res.truncated) print("[output truncated]", "err");
+      if (res.timedOut) print("[command timed out]", "err");
+      if (res.cwd && res.cwd !== cwd) setCwd(res.cwd);
+    } catch (err) {
+      print(`shell bridge error: ${err instanceof Error ? err.message : String(err)}`, "err");
+    } finally {
+      setBusy(false);
+    }
+  };
 
   const run = (raw: string) => {
     const cmd = raw.trim();
     setHistory((h) => [...h, { type: "in", text: `${prompt} ${cmd}` }]);
     if (!cmd) return;
     setPast((p) => [...p, cmd]);
+
+    // Bridge control commands work in both modes.
+    if (cmd === "native" || cmd.startsWith("native ")) {
+      const arg = cmd.slice(6).trim();
+      if (arg === "off") {
+        setUseNative(false);
+        setCwd("/home");
+        print("switched to the simulated NEXUS userland");
+      } else if (arg === "on") {
+        resetNativeProbe();
+        void detectNativeShell().then((info) => {
+          setNative(info);
+          if (info.available) {
+            setUseNative(true);
+            setCwd(info.home || "/home/nexus");
+            print(`switched to the real shell (${info.shell || "bash"})`);
+          } else {
+            print(`no real shell available here (${info.reason || "unreachable"})`, "err");
+          }
+        });
+      } else {
+        print(
+          useNative
+            ? `native: on — ${native?.shell || "bash"} on ${native?.os || "Linux"}`
+            : `native: off — simulated userland${native?.available ? " (real shell available: 'native on')" : ""}`,
+        );
+      }
+      return;
+    }
+
+    if (useNative) {
+      if (cmd === "clear") {
+        setHistory([]);
+        return;
+      }
+      void runRealShell(cmd);
+      return;
+    }
+
     void execLine(cmd, {
       cwd,
       setCwd,
@@ -43,6 +131,7 @@ export function Terminal() {
       clear: () => setHistory([]),
     });
   };
+
 
 
   const onKey = (e: React.KeyboardEvent<HTMLInputElement>) => {
