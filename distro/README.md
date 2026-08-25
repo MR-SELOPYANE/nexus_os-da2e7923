@@ -73,6 +73,29 @@ To enable it, publish `nexus-shell` RPMs with `createrepo_c` and copy
 `/etc/yum.repos.d/nexus.repo.example` to `/etc/yum.repos.d/nexus.repo` with
 `baseurl` pointed at that repo. Without that file the timer exits cleanly.
 
+## Real Linux terminal
+
+On the booted ISO the NEXUS Terminal is a front-end for a **real** shell, not a
+simulation. `/opt/nexus/server.mjs` exposes a loopback-only bridge:
+
+- `GET /nexus/exec` — capability probe (shell, user, host, `$HOME`, distro, kernel)
+- `POST /nexus/exec` `{ cmd, cwd }` — runs the line in `bash -l -c`, returns
+  `{ stdout, stderr, code, cwd }`
+
+Commands run as the unprivileged `nexus` user, so `ls`, `dnf`, `systemctl`,
+`journalctl`, pipes, redirection and scripts all behave exactly as they do on
+any Fedora box. `cd` persists because the bridge reports `$PWD` back to the
+Terminal; shell variables and background jobs do not survive between lines
+(each line is its own login shell).
+
+In a plain browser (preview or the hosted web build) the probe fails and the
+Terminal transparently falls back to the built-in simulated userland. Switch
+manually with `native on` / `native off`; `native` alone prints the mode.
+
+Tuning via the service environment: `NEXUS_EXEC=off` disables the bridge,
+`NEXUS_SHELL` picks a different shell, `NEXUS_EXEC_TIMEOUT` (ms) and
+`NEXUS_EXEC_MAXBYTES` cap runaway commands.
+
 ## Notes / limits
 
 - The on-device server (`/opt/nexus/server.mjs`) runs the **full** build — SSR plus
