@@ -31,7 +31,7 @@ export function FirstBootWizard() {
   const sa = useOS((s) => s.sa);
   const activeProfileId = useOS((s) => s.activeProfileId);
   const updateProfile = useOS((s) => s.updateProfile);
-  const setSettings = useOS((s) => s.setSettings);
+  const updateSettings = useOS((s) => s.updateSettings);
   const [profileName, setProfileName] = useState("");
   const [step, setStep] = useState(0);
   const [language, setLanguage] = useState<SALanguage>(sa.language);
@@ -44,7 +44,7 @@ export function FirstBootWizard() {
   const finish = () => {
     const name = profileName.trim() || "Guest";
     updateProfile(activeProfileId, { name });
-    setSettings({ username: name.toLowerCase().replace(/\s+/g, "") || "guest" });
+    updateSettings({ username: name.toLowerCase().replace(/\s+/g, "") || "guest" });
     updateSA({
       firstBootDone: true,
       language,
