@@ -29,6 +29,10 @@ const GREETINGS: Record<SALanguage, string> = {
 export function FirstBootWizard() {
   const updateSA = useOS((s) => s.updateSA);
   const sa = useOS((s) => s.sa);
+  const activeProfileId = useOS((s) => s.activeProfileId);
+  const updateProfile = useOS((s) => s.updateProfile);
+  const updateSettings = useOS((s) => s.updateSettings);
+  const [profileName, setProfileName] = useState("");
   const [step, setStep] = useState(0);
   const [language, setLanguage] = useState<SALanguage>(sa.language);
   const [province, setProvince] = useState<SAProvince>(sa.province);
@@ -38,6 +42,9 @@ export function FirstBootWizard() {
 
   const next = () => setStep((s) => s + 1);
   const finish = () => {
+    const name = profileName.trim() || "Guest";
+    updateProfile(activeProfileId, { name });
+    updateSettings({ username: name.toLowerCase().replace(/\s+/g, "") || "guest" });
     updateSA({
       firstBootDone: true,
       language,
@@ -59,6 +66,26 @@ export function FirstBootWizard() {
 
         {step === 0 && (
           <>
+            <h1 className="mb-1 text-3xl font-bold">What should we call you?</h1>
+            <p className="mb-6 text-sm text-muted-foreground">
+              This name is used for your NEXUS profile and greeting.
+            </p>
+            <input
+              autoFocus
+              value={profileName}
+              onChange={(e) => setProfileName(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && profileName.trim()) next();
+              }}
+              placeholder="Your name"
+              maxLength={32}
+              className="mb-6 w-full rounded-lg border border-white/10 bg-white/5 px-4 py-3 text-lg outline-none focus:border-primary"
+            />
+          </>
+        )}
+
+        {step === 1 && (
+          <>
             <h1 className="mb-1 text-3xl font-bold">{GREETINGS[language]}</h1>
             <p className="mb-6 text-sm text-muted-foreground">
               Made in Africa, for Africa. Let's set NEXUS up in your language.
@@ -79,7 +106,7 @@ export function FirstBootWizard() {
           </>
         )}
 
-        {step === 1 && (
+        {step === 2 && (
           <>
             <h1 className="mb-1 text-2xl font-bold">Where are you?</h1>
             <p className="mb-6 text-sm text-muted-foreground">
@@ -101,7 +128,7 @@ export function FirstBootWizard() {
           </>
         )}
 
-        {step === 2 && (
+        {step === 3 && (
           <>
             <h1 className="mb-1 text-2xl font-bold">Optimise for your network</h1>
             <p className="mb-6 text-sm text-muted-foreground">
@@ -130,13 +157,14 @@ export function FirstBootWizard() {
           </>
         )}
 
-        {step === 3 && (
+        {step === 4 && (
           <>
             <h1 className="mb-1 text-2xl font-bold">You're all set 🎉</h1>
             <p className="mb-4 text-sm text-muted-foreground">
               NEXUS is ready. Say <span className="text-primary">"Hey Nexus"</span> in {language} anytime, or press <kbd className="rounded bg-white/10 px-1.5 py-0.5 text-xs">Ctrl+K</kbd> to open Spotlight.
             </p>
             <ul className="mb-6 space-y-1 text-sm">
+              <li className="flex items-center gap-2"><Check className="size-4 text-emerald-400" /> Name: {profileName.trim() || "Guest"}</li>
               <li className="flex items-center gap-2"><Check className="size-4 text-emerald-400" /> Language: {language}</li>
               <li className="flex items-center gap-2"><Check className="size-4 text-emerald-400" /> Province: {province}</li>
               <li className="flex items-center gap-2"><Check className="size-4 text-emerald-400" /> Data Saver: {dataSaver ? "On" : "Off"}</li>
@@ -148,14 +176,15 @@ export function FirstBootWizard() {
 
         <div className="mt-2 flex items-center justify-between">
           <div className="flex gap-1">
-            {[0, 1, 2, 3].map((i) => (
+            {[0, 1, 2, 3, 4].map((i) => (
               <div key={i} className={`h-1.5 w-6 rounded-full ${i <= step ? "bg-primary" : "bg-white/10"}`} />
             ))}
           </div>
-          {step < 3 ? (
+          {step < 4 ? (
             <button
               onClick={next}
-              className="flex items-center gap-1 rounded bg-primary px-4 py-2 text-sm font-medium text-primary-foreground"
+              disabled={step === 0 && !profileName.trim()}
+              className="flex items-center gap-1 rounded bg-primary px-4 py-2 text-sm font-medium text-primary-foreground disabled:opacity-40"
             >
               Continue <ChevronRight className="size-4" />
             </button>
