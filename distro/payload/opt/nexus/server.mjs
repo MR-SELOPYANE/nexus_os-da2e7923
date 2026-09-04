@@ -17,6 +17,7 @@ import { extname, join, normalize, dirname } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { Readable } from 'node:stream';
 import { tmpdir, hostname, release, userInfo } from 'node:os';
+import { handleNexusApi } from './nexus-api.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const APP = process.env.NEXUS_APP || join(HERE, 'app');
@@ -187,6 +188,11 @@ function json(res, status, payload) {
 createServer(async (req, res) => {
   try {
     const url = new URL(req.url || '/', `http://${HOST}:${PORT}`);
+
+    // Real device API (filesystem, processes, hardware, apps, packages, auth).
+    if (url.pathname.startsWith('/nexus/') && url.pathname !== '/nexus/exec' && url.pathname !== '/nexus/install') {
+      if (await handleNexusApi(req, res, url)) return;
+    }
 
     // Real Linux shell bridge (loopback only).
     if (url.pathname === '/nexus/exec') {
