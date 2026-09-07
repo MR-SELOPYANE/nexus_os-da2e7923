@@ -37,6 +37,8 @@ import {
   CalendarRange,
   Wallet as WalletIcon,
   Gamepad2,
+  Cpu,
+  Package,
   type LucideIcon,
 } from "lucide-react";
 import type { AppId } from "./store";
@@ -90,6 +92,8 @@ export const APPS: AppMeta[] = [
   { id: "weather", name: "Weather", icon: CloudSun, tile: "from-sky-400 to-indigo-600", showOnDesktop: true },
   { id: "calendar", name: "Calendar", icon: CalendarRange, tile: "from-rose-400 to-pink-600", showOnDesktop: true },
   { id: "wallet", name: "Wallet", icon: WalletIcon, tile: "from-emerald-400 to-teal-600", showOnDesktop: true },
+  { id: "devicecenter", name: "Device Center", icon: Cpu, tile: "from-slate-500 to-slate-800" },
+  { id: "packages", name: "Packages", icon: Package, tile: "from-orange-400 to-red-600" },
   { id: "games", name: "Games", icon: Gamepad2, tile: "from-violet-500 to-fuchsia-700", showOnDesktop: true },
 ];
 

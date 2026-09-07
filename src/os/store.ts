@@ -47,7 +47,9 @@ export type AppId =
   | "weather"
   | "calendar"
   | "wallet"
-  | "games";
+  | "games"
+  | "devicecenter"
+  | "packages";
 
 // ================= South African / African Edition =================
 export type SAProvince =
@@ -575,6 +577,8 @@ const APP_TITLES: Record<AppId, string> = {
   calendar: "Calendar",
   wallet: "Wallet",
   games: "Games",
+  devicecenter: "Device Center",
+  packages: "Packages",
 };
 
 const DEFAULT_SIZE: Record<AppId, { w: number; h: number }> = {
@@ -616,6 +620,8 @@ const DEFAULT_SIZE: Record<AppId, { w: number; h: number }> = {
   calendar: { w: 860, h: 580 },
   wallet: { w: 820, h: 580 },
   games: { w: 520, h: 620 },
+  devicecenter: { w: 560, h: 640 },
+  packages: { w: 760, h: 560 },
 };
 
 const DEFAULT_PINNED: AppId[] = [
