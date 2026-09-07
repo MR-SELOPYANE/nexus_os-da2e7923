@@ -36,6 +36,8 @@ import { CloudApp } from "./apps/CloudApp";
 import { Weather } from "./apps/Weather";
 import { Calendar } from "./apps/Calendar";
 import { Wallet } from "./apps/Wallet";
+import { DeviceCenter } from "./apps/DeviceCenter";
+import { Packages } from "./apps/Packages";
 import { Games } from "./apps/Games";
 
 export function AppHost({ win }: { win: WindowState }) {
@@ -78,6 +80,8 @@ export function AppHost({ win }: { win: WindowState }) {
     case "calendar": return <Calendar />;
     case "wallet": return <Wallet />;
     case "games": return <Games />;
+    case "devicecenter": return <DeviceCenter />;
+    case "packages": return <Packages />;
     default: return null;
   }
 }
