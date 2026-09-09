@@ -1,17 +1,15 @@
 #!/bin/sh
 # Switch the NEXUS update channel: stable | beta | edge
-#   sudo nexus-channel            -> show current channel
-#   sudo nexus-channel beta       -> switch and refresh metadata
+#   nexus-channel            -> show current version and channel
+#   sudo nexus-channel beta  -> switch channel and refresh metadata
 set -e
 RELEASE=/usr/share/nexus/release
 REPO=/etc/yum.repos.d/nexus.repo
 BASE_URL="${NEXUS_UPDATE_BASE:-https://updates.nexusos.africa}"
 
-current() { sed -n 's/^NEXUS_CHANNEL=//p' "$RELEASE" 2>/dev/null || echo stable; }
-
 if [ -z "${1:-}" ]; then
-  echo "version: $(sed -n 's/^NEXUS_VERSION=//p' $RELEASE)"
-  echo "channel: $(current)"
+  echo "version: $(sed -n 's/^NEXUS_VERSION=//p' "$RELEASE" 2>/dev/null || echo unknown)"
+  echo "channel: $(sed -n 's/^NEXUS_CHANNEL=//p' "$RELEASE" 2>/dev/null || echo stable)"
   exit 0
 fi
 
