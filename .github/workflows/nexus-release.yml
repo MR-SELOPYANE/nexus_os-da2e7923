@@ -1,0 +1,138 @@
+name: NEXUS release (signed RPM + repo)
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      channel:
+        description: "Release channel"
+        type: choice
+        options: [stable, beta, edge]
+        default: beta
+
+permissions:
+  contents: write
+
+env:
+  RELEASEVER: "41"
+
+jobs:
+  build-rpm:
+    runs-on: ubuntu-latest
+    container: fedora:41
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install build tooling
+        run: dnf -y install rpm-build rpm-sign createrepo_c gnupg2 nodejs npm git which findutils tar unzip
+
+      - name: Install bun
+        run: |
+          curl -fsSL https://bun.sh/install | bash
+          echo "$HOME/.bun/bin" >> "$GITHUB_PATH"
+
+      - name: Build the NEXUS shell bundle
+        run: |
+          bun install --frozen-lockfile
+          bun run build
+          test -d dist/client && test -f dist/server/index.mjs
+
+      - name: Derive version and channel
+        id: meta
+        run: |
+          VER="${GITHUB_REF_NAME#v}"
+          if [ "$GITHUB_REF_TYPE" != "tag" ]; then VER="0.0.$(date +%Y%m%d%H%M)"; fi
+          CH="${{ github.event.inputs.channel || 'stable' }}"
+          echo "version=$VER" >> "$GITHUB_OUTPUT"
+          echo "channel=$CH" >> "$GITHUB_OUTPUT"
+
+      - name: Assemble buildroot
+        run: |
+          BR="$PWD/.rpmroot"
+          mkdir -p "$BR/opt/nexus/app/client" "$BR/opt/nexus/app/server"
+          cp -a distro/payload/. "$BR/"
+          cp -a dist/client/. "$BR/opt/nexus/app/client/"
+          cp -a dist/server/. "$BR/opt/nexus/app/server/"
+          chmod +x "$BR"/opt/nexus/*.sh
+          sed -i "s/^NEXUS_VERSION=.*/NEXUS_VERSION=${{ steps.meta.outputs.version }}/;s/^NEXUS_CHANNEL=.*/NEXUS_CHANNEL=${{ steps.meta.outputs.channel }}/" "$BR/usr/share/nexus/release"
+
+      - name: Build RPM
+        run: |
+          mkdir -p ~/rpmbuild/SPECS
+          cat > ~/rpmbuild/SPECS/nexus-shell.spec <<SPEC
+          Name:      nexus-shell
+          Version:   ${{ steps.meta.outputs.version }}
+          Release:   1%{?dist}
+          Summary:   NEXUS OS desktop shell (kiosk session)
+          License:   MIT
+          BuildArch: noarch
+          Requires:  nodejs, chromium, cage, seatd, curl, sudo, plymouth
+          %description
+          The NEXUS OS graphical shell, served locally and rendered full-screen in a kiosk browser.
+          %install
+          mkdir -p %{buildroot}
+          cp -a $PWD/.rpmroot/. %{buildroot}/
+          %post
+          systemctl daemon-reload || :
+          plymouth-set-default-theme nexus || :
+          %files
+          /opt/nexus
+          /usr/share/nexus
+          /usr/share/plymouth/themes/nexus
+          /usr/share/anaconda/pixmaps
+          /etc/systemd/system/nexus-server.service
+          /etc/systemd/system/nexus-session.service
+          /etc/systemd/system/nexus-update.service
+          /etc/systemd/system/nexus-update.timer
+          /etc/yum.repos.d/nexus.repo.example
+          %changelog
+          * $(LC_ALL=C date '+%a %b %d %Y') NEXUS CI <ci@nexusos.africa> - ${{ steps.meta.outputs.version }}-1
+          - Automated build
+          SPEC
+          rpmbuild -bb ~/rpmbuild/SPECS/nexus-shell.spec
+
+      - name: Import signing key
+        env:
+          RPM_GPG_PRIVATE_KEY: ${{ secrets.RPM_GPG_PRIVATE_KEY }}
+          RPM_GPG_PASSPHRASE: ${{ secrets.RPM_GPG_PASSPHRASE }}
+        run: |
+          if [ -z "$RPM_GPG_PRIVATE_KEY" ]; then
+            echo "No signing key configured — producing an unsigned repo."
+            exit 0
+          fi
+          printf '%s' "$RPM_GPG_PRIVATE_KEY" | gpg --batch --import
+          KEYID=$(gpg --list-secret-keys --with-colons | awk -F: '/^sec/{print $5; exit}')
+          {
+            echo "%_gpg_name $KEYID"
+            echo "%__gpg_sign_cmd %{__gpg} gpg --batch --pinentry-mode loopback --passphrase '$RPM_GPG_PASSPHRASE' --no-armor --no-secmem-warning -u %{_gpg_name} -sbo %{__signature_filename} %{__plaintext_filename}"
+          } >> ~/.rpmmacros
+          gpg --armor --export "$KEYID" > RPM-GPG-KEY-nexus
+
+      - name: Sign RPMs and build repo metadata
+        env:
+          RPM_GPG_PASSPHRASE: ${{ secrets.RPM_GPG_PASSPHRASE }}
+        run: |
+          DEST="repo/${{ steps.meta.outputs.channel }}/f${RELEASEVER}/noarch"
+          mkdir -p "$DEST"
+          cp ~/rpmbuild/RPMS/noarch/*.rpm "$DEST/"
+          if [ -f RPM-GPG-KEY-nexus ]; then
+            rpm --addsign "$DEST"/*.rpm
+            cp RPM-GPG-KEY-nexus repo/
+          fi
+          createrepo_c "$DEST"
+          if [ -f RPM-GPG-KEY-nexus ]; then
+            gpg --batch --pinentry-mode loopback --passphrase "$RPM_GPG_PASSPHRASE" \
+              --detach-sign --armor "$DEST/repodata/repomd.xml"
+          fi
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: nexus-repo-${{ steps.meta.outputs.channel }}
+          path: repo/
+
+      - name: Attach RPM to the release
+        if: github.ref_type == 'tag'
+        uses: softprops/action-gh-release@v2
+        with:
+          files: repo/**/*.rpm
