@@ -36,27 +36,34 @@ mkdir -p "$BR/opt/nexus/app/client" "$BR/opt/nexus/app/server"
 cp -a "$HERE/payload/opt/nexus/." "$BR/opt/nexus/"
 cp -a "$CLIENT_DIST/." "$BR/opt/nexus/app/client/"
 cp -a "$SERVER_DIST/." "$BR/opt/nexus/app/server/"
-mkdir -p "$BR/etc/systemd/system" "$BR/etc/yum.repos.d"
+mkdir -p "$BR/etc/systemd/system" "$BR/etc/yum.repos.d" "$BR/usr/share"
+cp -a "$HERE/payload/usr/share/." "$BR/usr/share/"
 cp -a "$HERE/payload/etc/systemd/system/." "$BR/etc/systemd/system/"
 cp -a "$HERE/payload/etc/yum.repos.d/." "$BR/etc/yum.repos.d/"
-chmod +x "$BR/opt/nexus/session.sh" "$BR/opt/nexus/install.sh" "$BR/opt/nexus/update.sh"
+chmod +x "$BR"/opt/nexus/*.sh
 
 
 cat > "$WORK/SPECS/nexus-shell.spec" <<EOF
 Name:           nexus-shell
-Version:        1.0
+Version:        1.1.0
 Release:        1%{?dist}
 Summary:        NEXUS OS desktop shell (kiosk session)
 License:        MIT
 BuildArch:      noarch
-Requires:       nodejs, chromium, cage, seatd, curl, sudo
+Requires:       nodejs, chromium, cage, seatd, curl, sudo, plymouth
 %description
 The NEXUS OS graphical shell served locally and rendered full-screen in a kiosk browser.
 %install
 mkdir -p %{buildroot}
 cp -a $BR/. %{buildroot}/
+%post
+systemctl daemon-reload || :
+plymouth-set-default-theme nexus || :
 %files
 /opt/nexus
+/usr/share/nexus
+/usr/share/plymouth/themes/nexus
+/usr/share/anaconda/pixmaps
 /etc/systemd/system/nexus-server.service
 /etc/systemd/system/nexus-session.service
 /etc/systemd/system/nexus-update.service
@@ -93,4 +100,7 @@ sha256sum "$OUT/nexus-os-x86_64.iso" > "$OUT/nexus-os-x86_64.iso.sha256"
 
 echo
 echo ">> DONE: $OUT/nexus-os-x86_64.iso"
+echo ">> persistent USB: sudo distro/mkpersistent.sh /dev/sdX"
+echo ">> secure boot:    distro/sign-secureboot.sh generate && sudo distro/sign-secureboot.sh sign <isoroot>"
+echo ">> offline mirror: distro/mkmirror.sh"
 echo ">> test: qemu-system-x86_64 -m 4096 -enable-kvm -cdrom $OUT/nexus-os-x86_64.iso"

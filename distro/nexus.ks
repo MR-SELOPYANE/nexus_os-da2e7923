@@ -70,7 +70,8 @@ ExecStart=-/sbin/agetty --autologin nexus --noclear %I $TERM
 EOF
 
 chown -R nexus:nexus /opt/nexus
-chmod +x /opt/nexus/session.sh /opt/nexus/install.sh /opt/nexus/update.sh
+chmod +x /opt/nexus/session.sh /opt/nexus/install.sh /opt/nexus/update.sh /opt/nexus/channel.sh
+ln -sf /opt/nexus/channel.sh /usr/bin/nexus-channel
 
 # The kiosk user may launch exactly one privileged command: the disk installer.
 cat > /etc/sudoers.d/nexus-install <<'EOF'
@@ -78,6 +79,30 @@ nexus ALL=(root) NOPASSWD: /opt/nexus/install.sh
 EOF
 chmod 0440 /etc/sudoers.d/nexus-install
 ln -sf /opt/nexus/install.sh /usr/bin/nexus-install
+
+# Branded boot splash (silent, no kernel spew)
+plymouth-set-default-theme nexus || true
+if [ -f /etc/default/grub ]; then
+  sed -i 's/rhgb quiet//; s/GRUB_CMDLINE_LINUX="\(.*\)"/GRUB_CMDLINE_LINUX="\1 rhgb quiet splash"/' /etc/default/grub
+fi
+dracut --force --regenerate-all || true
+
+# Branded Anaconda installer
+mkdir -p /etc/anaconda/product.d
+cat > /etc/anaconda/product.d/nexus.conf <<'EOF'
+[Product]
+product_name = NEXUS OS
+
+[Base Product]
+product_name = Fedora
+
+[User Interface]
+custom_stylesheet = /usr/share/anaconda/pixmaps/nexus.css
+EOF
+cat > /usr/share/anaconda/pixmaps/nexus.css <<'EOF'
+.logo-sidebar { background-image: url('/usr/share/anaconda/pixmaps/sidebar-bg.png'); background-color: #080d18; background-repeat: no-repeat; }
+.logo { background-image: url('/usr/share/anaconda/pixmaps/sidebar-logo.png'); }
+EOF
 
 systemctl enable nexus-server.service nexus-session.service
 systemctl enable nexus-update.timer || true
@@ -95,7 +120,8 @@ NAME="NEXUS OS"
 PRETTY_NAME="NEXUS OS (African Edition)"
 ID=nexus
 ID_LIKE="fedora rhel"
-VERSION_ID="1.0"
+VERSION_ID="1.1.0"
+VERSION="1.1.0 (Karoo)"
 VARIANT="Live"
 HOME_URL="https://lovable.dev/"
 EOF
