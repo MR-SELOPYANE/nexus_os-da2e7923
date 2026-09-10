@@ -272,29 +272,52 @@ registerCommand({
 
 registerCommand({
   name: "netstat",
-  description: "Show simulated network connections",
+  description: "Show the live connection and recent requests",
   run: ({ store, print }) => {
-    if (!store.network.online) return print("netstat: no active connections (offline)");
+    const n = store.network;
+    if (!n.online) return print("netstat: no active connections (offline)");
+    const rows = performance
+      .getEntriesByType("resource")
+      .slice(-8)
+      .map((e) => {
+        const r = e as PerformanceResourceTiming;
+        let host = "";
+        try {
+          host = new URL(r.name).host;
+        } catch {
+          host = r.name;
+        }
+        return `${(r.initiatorType || "fetch").padEnd(10)} ${host.padEnd(28)} ${r.duration.toFixed(0)} ms`;
+      });
     print(
       [
-        "Proto Local Address      Foreign Address    State",
-        "tcp   127.0.0.1:8080     0.0.0.0:*          LISTEN",
-        "tcp   127.0.0.1:54312    nexus-cdn:443     ESTABLISHED",
-        "tcp   127.0.0.1:54318    nexus-store:443   ESTABLISHED",
-        "udp   0.0.0.0:53         *:*                ",
-      ].join("\n")
+        `link: ${n.connectionType ?? "unknown"}${n.downlink !== undefined ? ` · ${n.downlink} Mbit/s` : ""}${n.rtt !== undefined ? ` · ${n.rtt} ms rtt` : ""}`,
+        n.ssid ? `ssid: ${n.ssid}` : null,
+        "",
+        "Type       Host                         Time",
+        ...(rows.length ? rows : ["(no recent requests)"]),
+      ]
+        .filter((x) => x !== null)
+        .join("\n")
     );
   },
 });
 
 registerCommand({
   name: "curl",
-  description: "Fetch an nexus:// page",
-  run: ({ store, args, print }) => {
+  description: "Fetch a real URL through the NEXUS proxy",
+  run: async ({ store, args, print }) => {
     const url = args[0] ?? "";
-    if (!url.startsWith("nexus://")) return print("curl: only nexus:// URLs are routable", "err");
+    if (!url) return print("usage: curl <url>", "err");
     if (!store.network.online) return print("curl: (6) Could not resolve host (offline)", "err");
-    print(`HTTP/1.1 200 OK\nContent-Type: text/nexus\n\n<page url="${url}">simulated content body</page>`);
+    const target = url.startsWith("http") ? url : `https://${url}`;
+    try {
+      const res = await fetch(`/api/public/proxy?url=${encodeURIComponent(target)}`, { cache: "no-store" });
+      const body = await res.text();
+      print(`HTTP/1.1 ${res.status} ${res.statusText}\nContent-Type: ${res.headers.get("content-type") ?? "unknown"}\n\n${body.slice(0, 2000)}${body.length > 2000 ? "\n… (truncated)" : ""}`);
+    } catch (e) {
+      print(`curl: request failed (${(e as Error).message})`, "err");
+    }
   },
 });
 
