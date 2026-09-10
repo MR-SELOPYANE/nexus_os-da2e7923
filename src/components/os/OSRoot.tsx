@@ -22,6 +22,7 @@ import { ShortcutsHelp } from "./ShortcutsHelp";
 import { WALLPAPERS } from "@/os/wallpapers";
 import { sfx } from "@/lib/sounds";
 import { registerServiceWorker } from "@/lib/pwa";
+import { useRealDevice } from "@/os/real-device";
 
 
 function PerfHudGate() {
@@ -30,6 +31,7 @@ function PerfHudGate() {
 }
 
 export function OSRoot() {
+  useRealDevice();
   useEffect(() => {
     registerServiceWorker();
   }, []);

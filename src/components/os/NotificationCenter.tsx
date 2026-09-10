@@ -21,8 +21,8 @@ export function NotificationCenter({ open, onClose }: { open: boolean; onClose: 
   const quick = useOS((s) => s.quick);
   const setQuick = useOS((s) => s.setQuick);
   const network = useOS((s) => s.network);
+  const openApp = useOS((s) => s.openApp);
   const toggleAirplane = useOS((s) => s.toggleAirplane);
-  const connectWifi = useOS((s) => s.connectWifi);
   const disconnectWifi = useOS((s) => s.disconnectWifi);
   const windows = useOS((s) => s.windows);
   const appVolumes = useOS((s) => s.appVolumes);
@@ -36,8 +36,10 @@ export function NotificationCenter({ open, onClose }: { open: boolean; onClose: 
 
   const toggleWifi = () => {
     if (network.airplane) return;
-    if (network.online) disconnectWifi();
-    else connectWifi(network.networks[0]?.ssid ?? "Nexus-Home");
+    // Radios can only be switched on a real NEXUS device; in a browser this
+    // just opens the Network panel showing the genuine connection.
+    if (network.native && network.ssid) void disconnectWifi();
+    else openApp("network");
   };
 
   return (

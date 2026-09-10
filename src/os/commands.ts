@@ -245,46 +245,79 @@ registerCommand({
 
 registerCommand({
   name: "ping",
-  description: "Simulate a network ping",
-  run: ({ store, args, print }) => {
-    const host = args[0] ?? "localhost";
+  description: "Measure a real round-trip to a host",
+  run: async ({ store, args, print }) => {
+    const host = args[0] ?? window.location.host;
     if (!store.network.online) {
       return print(`ping: ${host}: Network is unreachable`, "err");
     }
-    const lines = [`PING ${host} (127.0.0.1): 56 data bytes`];
+    const url = args[0] ? `/api/public/proxy?url=${encodeURIComponent(`https://${host}`)}` : "/favicon.ico";
+    const times: number[] = [];
     for (let i = 0; i < 4; i++) {
-      lines.push(`64 bytes from ${host}: icmp_seq=${i} ttl=64 time=${(Math.random() * 0.8 + 0.1).toFixed(3)} ms`);
+      const t0 = performance.now();
+      try {
+        await fetch(`${url}${url.includes("?") ? "&" : "?"}_=${Date.now()}${i}`, { cache: "no-store" });
+        const ms = performance.now() - t0;
+        times.push(ms);
+        print(`reply from ${host}: seq=${i} time=${ms.toFixed(1)} ms`);
+      } catch {
+        print(`request to ${host}: seq=${i} timed out`, "err");
+      }
     }
-    lines.push("", `--- ${host} ping statistics ---`, "4 packets transmitted, 4 received, 0.0% packet loss");
-    print(lines.join("\n"));
+    const loss = ((4 - times.length) / 4) * 100;
+    const avg = times.length ? times.reduce((a, b) => a + b, 0) / times.length : 0;
+    print(`--- ${host} ping statistics ---\n4 requests, ${times.length} replies, ${loss.toFixed(1)}% loss, avg ${avg.toFixed(1)} ms`);
   },
 });
 
 registerCommand({
   name: "netstat",
-  description: "Show simulated network connections",
+  description: "Show the live connection and recent requests",
   run: ({ store, print }) => {
-    if (!store.network.online) return print("netstat: no active connections (offline)");
+    const n = store.network;
+    if (!n.online) return print("netstat: no active connections (offline)");
+    const rows = performance
+      .getEntriesByType("resource")
+      .slice(-8)
+      .map((e) => {
+        const r = e as PerformanceResourceTiming;
+        let host = "";
+        try {
+          host = new URL(r.name).host;
+        } catch {
+          host = r.name;
+        }
+        return `${(r.initiatorType || "fetch").padEnd(10)} ${host.padEnd(28)} ${r.duration.toFixed(0)} ms`;
+      });
     print(
       [
-        "Proto Local Address      Foreign Address    State",
-        "tcp   127.0.0.1:8080     0.0.0.0:*          LISTEN",
-        "tcp   127.0.0.1:54312    nexus-cdn:443     ESTABLISHED",
-        "tcp   127.0.0.1:54318    nexus-store:443   ESTABLISHED",
-        "udp   0.0.0.0:53         *:*                ",
-      ].join("\n")
+        `link: ${n.connectionType ?? "unknown"}${n.downlink !== undefined ? ` · ${n.downlink} Mbit/s` : ""}${n.rtt !== undefined ? ` · ${n.rtt} ms rtt` : ""}`,
+        n.ssid ? `ssid: ${n.ssid}` : null,
+        "",
+        "Type       Host                         Time",
+        ...(rows.length ? rows : ["(no recent requests)"]),
+      ]
+        .filter((x) => x !== null)
+        .join("\n")
     );
   },
 });
 
 registerCommand({
   name: "curl",
-  description: "Fetch an nexus:// page",
-  run: ({ store, args, print }) => {
+  description: "Fetch a real URL through the NEXUS proxy",
+  run: async ({ store, args, print }) => {
     const url = args[0] ?? "";
-    if (!url.startsWith("nexus://")) return print("curl: only nexus:// URLs are routable", "err");
+    if (!url) return print("usage: curl <url>", "err");
     if (!store.network.online) return print("curl: (6) Could not resolve host (offline)", "err");
-    print(`HTTP/1.1 200 OK\nContent-Type: text/nexus\n\n<page url="${url}">simulated content body</page>`);
+    const target = url.startsWith("http") ? url : `https://${url}`;
+    try {
+      const res = await fetch(`/api/public/proxy?url=${encodeURIComponent(target)}`, { cache: "no-store" });
+      const body = await res.text();
+      print(`HTTP/1.1 ${res.status} ${res.statusText}\nContent-Type: ${res.headers.get("content-type") ?? "unknown"}\n\n${body.slice(0, 2000)}${body.length > 2000 ? "\n… (truncated)" : ""}`);
+    } catch (e) {
+      print(`curl: request failed (${(e as Error).message})`, "err");
+    }
   },
 });
 
@@ -295,27 +328,39 @@ registerCommand({
     const [sub, ssid] = args;
     if (!sub || sub === "status") {
       const n = store.network;
+      const detail = [
+        n.connectionType ? `link: ${n.connectionType}` : null,
+        n.downlink !== undefined ? `downlink: ${n.downlink} Mbit/s` : null,
+        n.rtt !== undefined ? `rtt: ${n.rtt} ms` : null,
+        `source: ${n.native ? "NetworkManager" : "browser"}`,
+      ].filter(Boolean).join("\n");
       print(
-        n.airplane
-          ? "airplane mode: on"
-          : n.ssid
-            ? `connected: ${n.ssid} (signal ${n.signal}/4)`
-            : "not connected"
+        [
+          n.airplane
+            ? "airplane mode: on"
+            : n.ssid
+              ? `connected: ${n.ssid}`
+              : n.online
+                ? "online"
+                : "offline",
+          detail,
+        ].join("\n")
       );
       return;
     }
     if (sub === "scan") {
       print("scanning...");
       await store.scanWifi();
-      print(store.network.networks.map((x) => `  ${x.ssid.padEnd(20)} ${"▮".repeat(x.signal)}${x.secured ? "  🔒" : ""}`).join("\n"));
+      const found = store.network.networks;
+      if (found.length === 0)
+        return print("no networks: Wi-Fi radios are only reachable on a NEXUS device", "err");
+      print(found.map((x) => `  ${x.ssid.padEnd(20)} ${"▮".repeat(x.signal)}${x.secured ? "  🔒" : ""}`).join("\n"));
       return;
     }
     if (sub === "connect") {
       if (!ssid) return print("usage: wifi connect <ssid>", "err");
-      if (!store.network.networks.some((n) => n.ssid === ssid))
-        return print(`wifi: unknown ssid '${ssid}'`, "err");
-      store.connectWifi(ssid);
-      print(`connected to ${ssid}`);
+      await store.connectWifi(ssid);
+      print(store.network.ssid === ssid ? `connected to ${ssid}` : `wifi: could not connect to ${ssid}`);
       return;
     }
     if (sub === "disconnect") {

@@ -319,6 +319,14 @@ export interface NetworkState {
   signal: number;
   scanning: boolean;
   networks: WifiNetwork[];
+  /** Real link info measured from the device (Network Information API / NetworkManager). */
+  connectionType?: string;
+  downlink?: number; // Mbit/s
+  rtt?: number; // ms
+  saveData?: boolean;
+  /** True when the values come from the host system rather than the browser. */
+  native?: boolean;
+  lastUpdated?: number;
 }
 
 export interface UpdateInfo {
@@ -445,9 +453,10 @@ interface OSState {
 
   // network
   network: NetworkState;
+  setNetwork: (patch: Partial<NetworkState>) => void;
   toggleAirplane: () => void;
   scanWifi: () => Promise<void>;
-  connectWifi: (ssid: string) => void;
+  connectWifi: (ssid: string, password?: string) => Promise<void> | void;
   disconnectWifi: () => void;
 
   // updates
@@ -1125,25 +1134,21 @@ export const useOS = create<OSState>()(
           restorePoints: keepFiles ? s.restorePoints : [],
         })),
 
-      // ----- network -----
+      // ----- network (real: browser Network Information API, or NetworkManager on device) -----
       network: {
-        online: true,
+        online: typeof navigator !== "undefined" ? navigator.onLine : true,
         airplane: false,
-        ssid: "Nexus-Home",
-        signal: 4,
+        ssid: null,
+        signal: 0,
         scanning: false,
-        networks: [
-          { ssid: "Nexus-Home", signal: 4, secured: true },
-          { ssid: "CloudCafe Guest", signal: 3, secured: false },
-          { ssid: "FiberNet 5G", signal: 3, secured: true },
-          { ssid: "NeighborNet", signal: 2, secured: true },
-          { ssid: "xfinitywifi", signal: 1, secured: false },
-        ],
+        networks: [],
+        native: false,
       },
+      setNetwork: (patch) => set((s) => ({ network: { ...s.network, ...patch } })),
       toggleAirplane: () => {
         const a = !get().network.airplane;
         set((s) => ({
-          network: { ...s.network, airplane: a, online: !a && !!s.network.ssid, ssid: a ? null : s.network.ssid },
+          network: { ...s.network, airplane: a, online: a ? false : navigator.onLine },
         }));
         get().notify({ title: "Network", message: a ? "Airplane mode on" : "Airplane mode off" });
         get().log("INFO", `airplane mode ${a ? "on" : "off"}`);
@@ -1151,21 +1156,53 @@ export const useOS = create<OSState>()(
       scanWifi: async () => {
         if (get().network.airplane) return;
         set((s) => ({ network: { ...s.network, scanning: true } }));
-        await new Promise((r) => setTimeout(r, 900));
-        set((s) => ({ network: { ...s.network, scanning: false } }));
-        get().log("INFO", "wifi scan complete");
+        try {
+          const { hostHw, detectNativeSystem } = await import("@/os/native-system");
+          const info = await detectNativeSystem();
+          if (info.available && info.capabilities?.wifi) {
+            const found = await hostHw.wifi();
+            const active = found.find((n) => n.active);
+            set((s) => ({
+              network: {
+                ...s.network,
+                native: true,
+                networks: found.map((n) => ({
+                  ssid: n.ssid,
+                  signal: Math.max(1, Math.round((n.signal / 100) * 4)),
+                  secured: Boolean(n.security && n.security !== "Open"),
+                })),
+                ssid: active?.ssid ?? s.network.ssid,
+                signal: active ? Math.max(1, Math.round((active.signal / 100) * 4)) : s.network.signal,
+                lastUpdated: Date.now(),
+              },
+            }));
+            get().log("INFO", `wifi scan: ${found.length} networks`);
+          } else {
+            get().log("WARN", "wifi scan unavailable: no NetworkManager (browser session)");
+          }
+        } catch {
+          get().log("ERR", "wifi scan failed");
+        } finally {
+          set((s) => ({ network: { ...s.network, scanning: false } }));
+        }
       },
-      connectWifi: (ssid) => {
-        const n = get().network.networks.find((x) => x.ssid === ssid);
-        if (!n) return;
-        set((s) => ({
-          network: { ...s.network, ssid, signal: n.signal, online: !s.network.airplane },
-        }));
-        get().notify({ title: "Wi-Fi", message: `Connected to ${ssid}` });
-        get().log("INFO", `wifi connected: ${ssid}`);
+      connectWifi: async (ssid, password) => {
+        try {
+          const { hostHw } = await import("@/os/native-system");
+          const res = await hostHw.wifiConnect(ssid, password);
+          if (res.ok) {
+            set((s) => ({ network: { ...s.network, ssid, online: true } }));
+            get().notify({ title: "Wi-Fi", message: `Connected to ${ssid}` });
+            get().log("INFO", `wifi connected: ${ssid}`);
+          } else {
+            get().notify({ title: "Wi-Fi", message: res.error || `Could not connect to ${ssid}` });
+          }
+        } catch {
+          get().notify({ title: "Wi-Fi", message: "Wi-Fi control is only available on a NEXUS device" });
+        }
       },
       disconnectWifi: () => {
-        set((s) => ({ network: { ...s.network, ssid: null, online: false, signal: 0 } }));
+        set((s) => ({ network: { ...s.network, ssid: null, signal: 0 } }));
         get().log("INFO", "wifi disconnected");
       },
 
@@ -1638,13 +1675,15 @@ export const useOS = create<OSState>()(
     }),
     {
       name: "nexus-os-v7",
-      version: 6,
+      version: 7,
       migrate: (persisted: unknown, _version: number) => {
         const p = (persisted as { settings?: Partial<Settings>; quick?: Partial<QuickSettings> } | null) ?? {};
         const s = p.settings ?? {};
         const q = p.quick ?? {};
+        const rest = { ...(persisted as Record<string, unknown>) };
+        delete rest["network"]; // never restore stale/simulated network state
         return {
-          ...(persisted as object),
+          ...rest,
           settings: {
             ...DEFAULT_SETTINGS,
             ...s,
@@ -1670,7 +1709,6 @@ export const useOS = create<OSState>()(
         notifications: s.notifications,
         packages: s.packages,
         logs: s.logs,
-        network: s.network,
         update: s.update,
         restorePoints: s.restorePoints,
         quick: s.quick,

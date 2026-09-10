@@ -1,5 +1,5 @@
 import { useOS } from "@/os/store";
-import { Wifi, WifiOff, Plane, Lock, RefreshCw, Loader2 } from "lucide-react";
+import { Wifi, WifiOff, Plane, Lock, RefreshCw, Loader2, Activity } from "lucide-react";
 
 function SignalBars({ level }: { level: number }) {
   return (
@@ -15,12 +15,25 @@ function SignalBars({ level }: { level: number }) {
   );
 }
 
+function Stat({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-lg border border-border/60 bg-black/20 px-3 py-2">
+      <div className="text-[11px] uppercase tracking-wide text-muted-foreground">{label}</div>
+      <div className="truncate text-sm font-medium tabular-nums">{value}</div>
+    </div>
+  );
+}
+
 export function Network() {
   const network = useOS((s) => s.network);
   const toggleAirplane = useOS((s) => s.toggleAirplane);
   const scan = useOS((s) => s.scanWifi);
   const connect = useOS((s) => s.connectWifi);
   const disconnect = useOS((s) => s.disconnectWifi);
+
+  const updated = network.lastUpdated
+    ? new Date(network.lastUpdated).toLocaleTimeString()
+    : "—";
 
   return (
     <div className="flex h-full flex-col bg-card">
@@ -36,8 +49,28 @@ export function Network() {
             ? "Airplane mode"
             : network.ssid
               ? `Connected · ${network.ssid}`
-              : "Not connected"}
+              : network.online
+                ? "Online"
+                : "Offline"}
         </span>
+      </div>
+
+      {/* Live link measurements */}
+      <div className="grid grid-cols-2 gap-2 border-b border-border/60 p-4 sm:grid-cols-4">
+        <Stat label="Status" value={network.online ? "Online" : "Offline"} />
+        <Stat label="Link" value={network.connectionType ?? "unknown"} />
+        <Stat
+          label="Downlink"
+          value={network.downlink !== undefined ? `${network.downlink} Mbit/s` : "—"}
+        />
+        <Stat label="Latency" value={network.rtt !== undefined ? `${network.rtt} ms` : "—"} />
+      </div>
+
+      <div className="flex items-center gap-2 border-b border-border/60 px-4 py-2 text-[11px] text-muted-foreground">
+        <Activity className="size-3.5" />
+        Live from {network.native ? "NetworkManager on this device" : "this device's connection"} ·
+        updated {updated}
+        {network.saveData && <span className="ml-auto">Data saver on</span>}
       </div>
 
       <div className="border-b border-border/60 p-4">
@@ -82,10 +115,16 @@ export function Network() {
         </button>
       </div>
 
-      <div className="flex-1 overflow-y-auto os-scroll p-3">
+      <div className="os-scroll flex-1 overflow-y-auto p-3">
         {network.airplane ? (
           <p className="py-8 text-center text-sm text-muted-foreground">
             Airplane mode is on. Turn it off to see networks.
+          </p>
+        ) : network.networks.length === 0 ? (
+          <p className="px-4 py-8 text-center text-sm text-muted-foreground">
+            No Wi-Fi list to show. Scanning and joining networks needs the radio, which is only
+            reachable when NEXUS is running as the desktop on a machine — the connection details
+            above are real either way.
           </p>
         ) : (
           <ul className="space-y-1">
@@ -99,7 +138,7 @@ export function Network() {
                   }`}
                 >
                   <SignalBars level={n.signal} />
-                  <div className="flex-1 min-w-0">
+                  <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-1.5 truncate font-medium">
                       {n.ssid}
                       {n.secured && <Lock className="size-3 text-muted-foreground" />}
@@ -117,7 +156,13 @@ export function Network() {
                     </button>
                   ) : (
                     <button
-                      onClick={() => connect(n.ssid)}
+                      onClick={() => {
+                        const password = n.secured
+                          ? prompt(`Password for ${n.ssid}`) ?? undefined
+                          : undefined;
+                        if (n.secured && password === undefined) return;
+                        void connect(n.ssid, password);
+                      }}
                       className="rounded-md bg-primary px-2 py-1 text-xs font-medium text-primary-foreground hover:brightness-110"
                     >
                       Connect

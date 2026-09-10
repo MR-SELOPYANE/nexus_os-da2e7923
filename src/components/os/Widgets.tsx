@@ -2,12 +2,26 @@ import { useEffect, useMemo, useState } from "react";
 import { Cloud, Cpu, MemoryStick, CalendarDays, Sun, CloudRain, Snowflake, StickyNote, Zap } from "lucide-react";
 import { useOS } from "@/os/store";
 
-const WEATHER_PRESETS = [
-  { icon: Sun, label: "Sunny", temp: 24 },
-  { icon: Cloud, label: "Partly cloudy", temp: 18 },
-  { icon: CloudRain, label: "Light rain", temp: 14 },
-  { icon: Snowflake, label: "Snow showers", temp: -2 },
-];
+/** Province capitals used as the fallback location for live weather. */
+const PROVINCE_COORDS: Record<string, [number, number]> = {
+  Gauteng: [-26.2041, 28.0473],
+  "Western Cape": [-33.9249, 18.4241],
+  "KwaZulu-Natal": [-29.8587, 31.0218],
+  "Eastern Cape": [-33.9608, 25.6022],
+  "Free State": [-29.1197, 26.2136],
+  Limpopo: [-23.9045, 29.4689],
+  Mpumalanga: [-25.4658, 30.9785],
+  "Northern Cape": [-28.7282, 24.7499],
+  "North West": [-25.866, 25.6545],
+};
+
+function weatherLook(code: number, isDay: boolean) {
+  if (code >= 71 && code <= 77) return { icon: Snowflake, label: "Snow" };
+  if ((code >= 51 && code <= 67) || (code >= 80 && code <= 99))
+    return { icon: CloudRain, label: code >= 95 ? "Thunderstorm" : "Rain" };
+  if (code >= 2) return { icon: Cloud, label: code === 3 ? "Overcast" : "Partly cloudy" };
+  return { icon: isDay ? Sun : Cloud, label: code === 1 ? "Mainly clear" : "Clear" };
+}
 
 export function Widgets() {
   const visible = useOS((s) => s.quick.widgetsVisible);
@@ -26,10 +40,48 @@ export function Widgets() {
     return () => clearInterval(t);
   }, []);
 
-  const weather = useMemo(() => {
-    const day = Math.floor((+now - +new Date(now.getFullYear(), 0, 0)) / 86400000);
-    return WEATHER_PRESETS[day % WEATHER_PRESETS.length];
-  }, [now]);
+  // Live weather from Open-Meteo for the device location (falls back to the province).
+  const [weather, setWeather] = useState<{
+    temp: number;
+    code: number;
+    isDay: boolean;
+    place: string;
+  } | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    const load = async (lat: number, lon: number, place: string) => {
+      try {
+        const r = await fetch(
+          `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,weather_code,is_day`
+        );
+        const j = (await r.json()) as {
+          current?: { temperature_2m: number; weather_code: number; is_day: number };
+        };
+        if (cancelled || !j.current) return;
+        setWeather({
+          temp: Math.round(j.current.temperature_2m),
+          code: j.current.weather_code,
+          isDay: j.current.is_day === 1,
+          place,
+        });
+      } catch {
+        /* stay empty rather than invent a temperature */
+      }
+    };
+    const [flat, flon] = PROVINCE_COORDS[sa.province] ?? PROVINCE_COORDS.Gauteng;
+    navigator.geolocation?.getCurrentPosition(
+      (pos) => void load(pos.coords.latitude, pos.coords.longitude, "Your location"),
+      () => void load(flat, flon, sa.province),
+      { timeout: 6000, maximumAge: 900000 }
+    );
+    if (!navigator.geolocation) void load(flat, flon, sa.province);
+    const t = setInterval(() => void load(flat, flon, sa.province), 900000);
+    return () => {
+      cancelled = true;
+      clearInterval(t);
+    };
+  }, [sa.province]);
 
   const todayEvents = useMemo(() => {
     const iso = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
@@ -59,7 +111,8 @@ export function Widgets() {
   // Hide widgets when off, in focus/gaming mode
   if (!visible || focusMode !== "off") return null;
 
-  const Wi = weather.icon;
+  const look = weather ? weatherLook(weather.code, weather.isDay) : null;
+  const Wi = look?.icon ?? Cloud;
   const has = (id: string) => enabled.includes(id as never);
 
   return (
@@ -79,11 +132,15 @@ export function Widgets() {
         <div className="pointer-events-auto flex items-center gap-3 rounded-2xl glass-strong p-4 shadow-[var(--shadow-window)]">
           <Wi className="size-10 text-primary" />
           <div className="flex-1">
-            <p className="text-3xl font-semibold leading-none">{weather.temp}°</p>
-            <p className="text-xs text-muted-foreground">{weather.label}</p>
+            <p className="text-3xl font-semibold leading-none">
+              {weather ? `${weather.temp}°` : "—"}
+            </p>
+            <p className="text-xs text-muted-foreground">
+              {weather ? `${look?.label} · ${weather.place}` : online ? "Loading…" : "Offline"}
+            </p>
           </div>
           <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
-            {online ? "Live" : "Cached"}
+            {weather ? "Live" : ""}
           </p>
         </div>
       )}
