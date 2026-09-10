@@ -319,6 +319,14 @@ export interface NetworkState {
   signal: number;
   scanning: boolean;
   networks: WifiNetwork[];
+  /** Real link info measured from the device (Network Information API / NetworkManager). */
+  connectionType?: string;
+  downlink?: number; // Mbit/s
+  rtt?: number; // ms
+  saveData?: boolean;
+  /** True when the values come from the host system rather than the browser. */
+  native?: boolean;
+  lastUpdated?: number;
 }
 
 export interface UpdateInfo {
