@@ -453,9 +453,10 @@ interface OSState {
 
   // network
   network: NetworkState;
+  setNetwork: (patch: Partial<NetworkState>) => void;
   toggleAirplane: () => void;
   scanWifi: () => Promise<void>;
-  connectWifi: (ssid: string) => void;
+  connectWifi: (ssid: string, password?: string) => Promise<void> | void;
   disconnectWifi: () => void;
 
   // updates
