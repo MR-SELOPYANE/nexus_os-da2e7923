@@ -21,8 +21,8 @@ export function NotificationCenter({ open, onClose }: { open: boolean; onClose: 
   const quick = useOS((s) => s.quick);
   const setQuick = useOS((s) => s.setQuick);
   const network = useOS((s) => s.network);
+  const openApp = useOS((s) => s.openApp);
   const toggleAirplane = useOS((s) => s.toggleAirplane);
-  const connectWifi = useOS((s) => s.connectWifi);
   const disconnectWifi = useOS((s) => s.disconnectWifi);
   const windows = useOS((s) => s.windows);
   const appVolumes = useOS((s) => s.appVolumes);
