@@ -347,7 +347,14 @@ export function Settings() {
                   </div>
                   <div className="mt-1 flex items-center justify-between">
                     <span className="text-muted-foreground">Network</span>
-                    <span>{network.ssid ?? "—"}</span>
+                    <span>{network.ssid ?? network.connectionType ?? "—"}</span>
+                  </div>
+                  <div className="mt-1 flex items-center justify-between">
+                    <span className="text-muted-foreground">Speed</span>
+                    <span className="tabular-nums">
+                      {network.downlink !== undefined ? `${network.downlink} Mbit/s` : "—"}
+                      {network.rtt !== undefined ? ` · ${network.rtt} ms` : ""}
+                    </span>
                   </div>
                 </div>
               </Row>
