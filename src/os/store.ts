@@ -1675,13 +1675,15 @@ export const useOS = create<OSState>()(
     }),
     {
       name: "nexus-os-v7",
-      version: 6,
+      version: 7,
       migrate: (persisted: unknown, _version: number) => {
         const p = (persisted as { settings?: Partial<Settings>; quick?: Partial<QuickSettings> } | null) ?? {};
         const s = p.settings ?? {};
         const q = p.quick ?? {};
+        const rest = { ...(persisted as Record<string, unknown>) };
+        delete rest["network"]; // never restore stale/simulated network state
         return {
-          ...(persisted as object),
+          ...rest,
           settings: {
             ...DEFAULT_SETTINGS,
             ...s,
@@ -1707,7 +1709,6 @@ export const useOS = create<OSState>()(
         notifications: s.notifications,
         packages: s.packages,
         logs: s.logs,
-        network: s.network,
         update: s.update,
         restorePoints: s.restorePoints,
         quick: s.quick,
