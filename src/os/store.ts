@@ -1181,7 +1181,7 @@ export const useOS = create<OSState>()(
             get().log("WARN", "wifi scan unavailable: no NetworkManager (browser session)");
           }
         } catch {
-          get().log("ERROR", "wifi scan failed");
+          get().log("ERR", "wifi scan failed");
         } finally {
           set((s) => ({ network: { ...s.network, scanning: false } }));
         }
