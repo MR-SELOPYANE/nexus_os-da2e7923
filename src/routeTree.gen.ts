@@ -11,8 +11,8 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ApiChatRouteImport } from './routes/api/chat'
-import { Route as ApiPublicSearchRouteImport } from './routes/api/public/search'
 import { Route as ApiPublicProxyRouteImport } from './routes/api/public/proxy'
+import { Route as ApiPublicSearchRouteImport } from './routes/api/public/search'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -24,14 +24,14 @@ const ApiChatRoute = ApiChatRouteImport.update({
   path: '/api/chat',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiPublicSearchRoute = ApiPublicSearchRouteImport.update({
-  id: '/api/public/search',
-  path: '/api/public/search',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const ApiPublicProxyRoute = ApiPublicProxyRouteImport.update({
   id: '/api/public/proxy',
   path: '/api/public/proxy',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicSearchRoute = ApiPublicSearchRouteImport.update({
+  id: '/api/public/search',
+  path: '/api/public/search',
   getParentRoute: () => rootRouteImport,
 } as any)
 
@@ -60,11 +60,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to: '/' | '/api/chat' | '/api/public/proxy' | '/api/public/search'
   id:
-    | '__root__'
-    | '/'
-    | '/api/chat'
-    | '/api/public/proxy'
-    | '/api/public/search'
+    '__root__' | '/' | '/api/chat' | '/api/public/proxy' | '/api/public/search'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -90,18 +86,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiChatRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/public/search': {
-      id: '/api/public/search'
-      path: '/api/public/search'
-      fullPath: '/api/public/search'
-      preLoaderRoute: typeof ApiPublicSearchRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/api/public/proxy': {
       id: '/api/public/proxy'
       path: '/api/public/proxy'
       fullPath: '/api/public/proxy'
       preLoaderRoute: typeof ApiPublicProxyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/search': {
+      id: '/api/public/search'
+      path: '/api/public/search'
+      fullPath: '/api/public/search'
+      preLoaderRoute: typeof ApiPublicSearchRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
