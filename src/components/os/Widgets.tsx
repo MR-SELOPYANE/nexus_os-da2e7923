@@ -30,7 +30,6 @@ export function Widgets() {
   const enabled = useOS((s) => s.settings.enabledWidgets);
   const stickyNote = useOS((s) => s.settings.stickyNote);
   const updateSettings = useOS((s) => s.updateSettings);
-  const processes = useOS((s) => s.processes);
   const events = useOS((s) => s.events);
   const online = useOS((s) => s.network.online);
   const sa = useOS((s) => s.sa);
