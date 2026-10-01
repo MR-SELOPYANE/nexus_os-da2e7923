@@ -23,7 +23,7 @@ export interface RealMetrics {
 /** Live metrics sampled from the device (native) or the browser runtime. */
 export function useRealMetrics(intervalMs = 2000): RealMetrics {
   const native = useNativeSystem();
-  const isNative = !!native?.native;
+  const isNative = !!native?.available && !!native.capabilities?.processes;
   const [stat, setStat] = useState<SysStat | null>(null);
   const [fps, setFps] = useState(0);
   const [frameMs, setFrameMs] = useState(0);
