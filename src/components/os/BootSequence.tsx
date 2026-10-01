@@ -67,7 +67,7 @@ export function BootSequence({ onDone }: { onDone: () => void }) {
       <div className="h-full w-full bg-black text-emerald-300 font-mono text-xs p-4 overflow-hidden">
         <pre className="whitespace-pre-wrap leading-relaxed">
 {lines.slice(0, shown).map((l, i) => `${l}\n`).join("")}
-{shown < POST_LINES.length ? <span className="animate-pulse">▮</span> : null}
+{shown < lines.length ? <span className="animate-pulse">▮</span> : null}
         </pre>
       </div>
     );
