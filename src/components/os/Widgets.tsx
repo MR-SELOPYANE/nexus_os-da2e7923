@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Cloud, Cpu, MemoryStick, CalendarDays, Sun, CloudRain, Snowflake, StickyNote, Zap } from "lucide-react";
+import { useRealMetrics } from "@/os/real-metrics";
 import { useOS } from "@/os/store";
 
 /** Province capitals used as the fallback location for live weather. */
@@ -88,8 +89,7 @@ export function Widgets() {
     return events.filter((e) => e.date === iso).slice(0, 4);
   }, [events, now]);
 
-  const cpu = Math.min(100, processes.reduce((a, p) => a + p.cpu, 0));
-  const mem = processes.reduce((a, p) => a + p.memory, 0);
+  const metrics = useRealMetrics(2000);
 
   // Load-shedding: deterministic 2h slot within the current 4h window, keyed by stage + province.
   const loadshed = useMemo(() => {
@@ -148,14 +148,32 @@ export function Widgets() {
       {has("system") && (
         <div className="pointer-events-auto rounded-2xl glass-strong p-4 shadow-[var(--shadow-window)]">
           <p className="mb-2 text-[10px] uppercase tracking-wider text-muted-foreground">System</p>
-          <Bar icon={<Cpu className="size-3.5" />} label="CPU" value={`${cpu.toFixed(0)}%`} pct={cpu} />
+          <Bar
+            icon={<Cpu className="size-3.5" />}
+            label={metrics.source === "device" ? "CPU" : "Render load"}
+            value={metrics.cpu == null ? "—" : `${metrics.cpu.toFixed(0)}%`}
+            pct={metrics.cpu ?? 0}
+          />
           <div className="h-2" />
           <Bar
             icon={<MemoryStick className="size-3.5" />}
-            label="Memory"
-            value={`${(mem / 1024).toFixed(1)} GB`}
-            pct={Math.min(100, (mem / 4096) * 100)}
+            label={metrics.source === "device" ? "Memory" : "Shell memory"}
+            value={
+              metrics.memUsedMB == null
+                ? "—"
+                : metrics.memUsedMB >= 1024
+                  ? `${(metrics.memUsedMB / 1024).toFixed(1)} GB`
+                  : `${metrics.memUsedMB.toFixed(0)} MB`
+            }
+            pct={
+              metrics.memUsedMB != null && metrics.memTotalMB
+                ? Math.min(100, (metrics.memUsedMB / metrics.memTotalMB) * 100)
+                : 0
+            }
           />
+          <p className="mt-2 text-[10px] text-muted-foreground">
+            {metrics.source === "device" ? "Live from /proc" : `Measured in this browser · ${metrics.fps} FPS`}
+          </p>
         </div>
       )}
 
