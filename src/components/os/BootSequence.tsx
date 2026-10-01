@@ -2,35 +2,57 @@ import { useEffect, useState } from "react";
 import { useOS } from "@/os/store";
 import { sfx } from "@/lib/sounds";
 
-const POST_LINES = [
-  "NEXUS BIOS v3.14 · Copyright (c) NEXUS Systems",
-  "CPU: Nexus Quantum Core @ 4.20GHz  x8",
-  "Memory Test: 4096 MB OK",
-  "Detecting IDE drives .......... [OK]",
-  "Detecting USB devices .......... [OK]",
-  "Initializing PCI Bus ........... [OK]",
-  "Loading nexus-kernel v1.0.0 .... [OK]",
-  "Mounting virtual filesystem .... [OK]",
-  "Starting window-server ......... [OK]",
-  "Starting notification-hub ...... [OK]",
-  "Starting network stack ......... [OK]",
-  "Loading nexus-shell ............ [OK]",
-  "Boot complete. Handing off to login manager.",
-];
+/** POST lines built from what the device actually reports. */
+function postLines(): string[] {
+  const nav = navigator as Navigator & { deviceMemory?: number };
+  const cores = nav.hardwareConcurrency ?? 0;
+  const ram = nav.deviceMemory;
+  const heap = (performance as Performance & { memory?: { jsHeapSizeLimit: number } }).memory;
+  const gpu = (() => {
+    try {
+      const gl = document.createElement("canvas").getContext("webgl");
+      const ext = gl?.getExtension("WEBGL_debug_renderer_info");
+      return ext ? String(gl?.getParameter(ext.UNMASKED_RENDERER_WEBGL)) : null;
+    } catch {
+      return null;
+    }
+  })();
+  const screenInfo = `${window.screen.width}x${window.screen.height} @ ${window.devicePixelRatio}x`;
+  return [
+    "NEXUS BIOS v3.14 · Copyright (c) NEXUS Systems",
+    `CPU: ${cores ? `${cores} logical cores` : "cores not reported"}`,
+    ram
+      ? `Memory: ${ram} GB reported${heap ? ` · heap limit ${(heap.jsHeapSizeLimit / 1073741824).toFixed(1)} GB` : ""}`
+      : heap
+        ? `Memory: heap limit ${(heap.jsHeapSizeLimit / 1073741824).toFixed(1)} GB`
+        : "Memory: not reported",
+    `Display: ${screenInfo}`,
+    gpu ? `Graphics: ${gpu}` : "Graphics: WebGL renderer hidden",
+    `Platform: ${navigator.platform || navigator.userAgent.slice(0, 40)}`,
+    `Locale: ${navigator.language} · ${Intl.DateTimeFormat().resolvedOptions().timeZone}`,
+    `Network: ${navigator.onLine ? "link up" : "link down"}`,
+    "Mounting filesystem ............ [OK]",
+    "Starting window-server ......... [OK]",
+    "Starting notification-hub ...... [OK]",
+    "Loading nexus-shell ............ [OK]",
+    "Boot complete. Handing off to login manager.",
+  ];
+}
 
 export function BootSequence({ onDone }: { onDone: () => void }) {
   const [phase, setPhase] = useState<"bios" | "logo">("bios");
   const [shown, setShown] = useState(0);
+  const [lines] = useState<string[]>(() => postLines());
 
   useEffect(() => {
     if (phase !== "bios") return;
-    if (shown >= POST_LINES.length) {
+    if (shown >= lines.length) {
       const t = setTimeout(() => setPhase("logo"), 400);
       return () => clearTimeout(t);
     }
     const t = setTimeout(() => setShown((n) => n + 1), 120 + Math.random() * 90);
     return () => clearTimeout(t);
-  }, [phase, shown]);
+  }, [phase, shown, lines.length]);
 
   useEffect(() => {
     if (phase === "logo") {
@@ -44,8 +66,8 @@ export function BootSequence({ onDone }: { onDone: () => void }) {
     return (
       <div className="h-full w-full bg-black text-emerald-300 font-mono text-xs p-4 overflow-hidden">
         <pre className="whitespace-pre-wrap leading-relaxed">
-{POST_LINES.slice(0, shown).map((l, i) => `${l}\n`).join("")}
-{shown < POST_LINES.length ? <span className="animate-pulse">▮</span> : null}
+{lines.slice(0, shown).map((l, i) => `${l}\n`).join("")}
+{shown < lines.length ? <span className="animate-pulse">▮</span> : null}
         </pre>
       </div>
     );
