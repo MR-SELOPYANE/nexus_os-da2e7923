@@ -89,7 +89,8 @@ export function useRealMetrics(intervalMs = 2000): RealMetrics {
   }
 
   // Browser: express render cost against a 60fps budget — a measured value, not a guess.
-  const cpu = frameMs > 0 ? Math.min(100, Math.round((frameMs / 16.67) * 100)) : null;
+  // 60fps (16.67ms) = 0% headroom used; 30fps or worse = 100%.
+  const cpu = frameMs > 0 ? Math.min(100, Math.max(0, Math.round((frameMs / 16.67 - 1) * 100))) : null;
   return {
     cpu,
     memUsedMB: heap ? heap.used : null,
