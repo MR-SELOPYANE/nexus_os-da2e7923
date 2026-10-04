@@ -36,7 +36,7 @@ export function FileExplorer() {
 
   if (mode === "host" && hostAvailable) {
     const root = native?.fsRoot || native?.home || "/home/nexus";
-    return <HostExplorer root={root} onLeave={() => setMode("virtual")} onSync={() => syncVirtualToDisk(fs, `${root}/NEXUS`)} />;
+    return <HostExplorer root={root} onLeave={() => setMode("virtual")} onSync={() => syncVirtualToDisk(fs, "NEXUS")} />;
   }
   const node = resolvePath(fs, cwd);
   const entries = isFolder(node)
@@ -170,8 +170,24 @@ export function FileExplorer() {
   );
 }
 
+/** Mirror the virtual filesystem onto the real disk (paths relative to the device fs root). */
+async function syncVirtualToDisk(fs: FSNode, target: string): Promise<number> {
+  let count = 0;
+  const walk = async (node: FSNode, path: string) => {
+    if (isFolder(node)) {
+      await hostFs.mkdir(path);
+      for (const [name, child] of Object.entries(node.children)) await walk(child, `${path}/${name}`);
+    } else if (isFile(node)) {
+      await hostFs.write(path, node.content);
+      count++;
+    }
+  };
+  await walk(fs, target);
+  return count;
+}
+
 /** Real on-disk browser — backed by the device API (/home/nexus and below). */
-function HostExplorer({ root, onLeave }: { root: string; onLeave: () => void }) {
+function HostExplorer({ root, onLeave, onSync }: { root: string; onLeave: () => void; onSync: () => Promise<number> }) {
   const openApp = useOS((s) => s.openApp);
   const [path, setPath] = useState("");
   const [items, setItems] = useState<HostEntry[]>([]);
@@ -225,6 +241,25 @@ function HostExplorer({ root, onLeave }: { root: string; onLeave: () => void }) 
         </button>
         <button onClick={() => load("")} className="grid size-7 place-items-center rounded-md text-muted-foreground hover:bg-white/10">
           <Home className="size-4" />
+        </button>
+        <button
+          disabled={busy}
+          onClick={async () => {
+            setBusy(true);
+            try {
+              const n = await onSync();
+              alert(`Saved ${n} files from NEXUS to the NEXUS folder on this computer.`);
+              await load(path);
+            } catch (err) {
+              alert(err instanceof Error ? err.message : "sync failed");
+            } finally {
+              setBusy(false);
+            }
+          }}
+          className="rounded-md px-2 py-1 text-[11px] text-muted-foreground hover:bg-white/10"
+          title="Copy your NEXUS files to the real disk"
+        >
+          Sync to disk
         </button>
         <div className="mx-1 flex flex-1 items-center gap-0.5 overflow-x-auto text-sm">
           <span className="flex items-center gap-1 rounded bg-emerald-500/15 px-1.5 py-0.5 text-[11px] text-emerald-300">
