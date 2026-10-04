@@ -13,7 +13,7 @@ import {
   RefreshCw,
 } from "lucide-react";
 import { useOS } from "@/os/store";
-import { resolvePath, isFolder, isFile, parentPath, normalizeParts } from "@/os/fs";
+import { resolvePath, isFolder, isFile, parentPath, normalizeParts, type FSNode } from "@/os/fs";
 import { openFileWith } from "@/os/fileAssoc";
 import { hostFs, useNativeSystem, formatBytes, type HostEntry } from "@/os/native-system";
 

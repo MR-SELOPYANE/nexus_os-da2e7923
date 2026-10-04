@@ -1,3 +1,4 @@
+import { WelcomeTour } from "./WelcomeTour";
 import { useEffect, useRef, useState } from "react";
 import { toast, Toaster } from "sonner";
 import { useOS, THEME_PRESETS } from "@/os/store";
@@ -55,6 +56,7 @@ export function OSRoot() {
   const snapWindow = useOS((s) => s.snapWindow);
   const toggleMaximize = useOS((s) => s.toggleMaximize);
   const firstBootDone = useOS((s) => s.sa.firstBootDone);
+  const tourDone = useOS((s) => s.sa.tourDone);
   const autoLockMinutes = useOS((s) => s.settings.autoLockMinutes);
   const screensaverEnabled = useOS((s) => s.settings.screensaverEnabled);
   const lock = useOS((s) => s.lock);
@@ -369,6 +371,7 @@ export function OSRoot() {
       <FocusModeBanner />
 
       {!firstBootDone && <FirstBootWizard />}
+      {firstBootDone && tourDone === false && <WelcomeTour />}
 
 
 

@@ -72,6 +72,7 @@ export interface EmergencyContact {
 
 export interface SAState {
   firstBootDone: boolean;
+  tourDone?: boolean;
   province: SAProvince;
   language: SALanguage;
   aiLanguage: SALanguage;
@@ -1621,6 +1622,7 @@ export const useOS = create<OSState>()(
       // ----- south african / african edition -----
       sa: {
         firstBootDone: false,
+        tourDone: false,
         province: "Gauteng",
         language: "English",
         aiLanguage: "English",
