@@ -27,6 +27,7 @@ export function FileExplorer() {
   const native = useNativeSystem();
   const hostAvailable = Boolean(native?.available && native.capabilities?.fs);
   const [mode, setMode] = useState<"virtual" | "host">("virtual");
+  const [cwd, setCwd] = useState("/home");
 
   // switch automatically to the real home directory on a NEXUS device
   useEffect(() => {
@@ -34,10 +35,9 @@ export function FileExplorer() {
   }, [hostAvailable]);
 
   if (mode === "host" && hostAvailable) {
-    return <HostExplorer root={native?.fsRoot || native?.home || "/home/nexus"} onLeave={() => setMode("virtual")} />;
+    const root = native?.fsRoot || native?.home || "/home/nexus";
+    return <HostExplorer root={root} onLeave={() => setMode("virtual")} onSync={() => syncVirtualToDisk(fs, `${root}/NEXUS`)} />;
   }
-
-  const [cwd, setCwd] = useState("/home");
   const node = resolvePath(fs, cwd);
   const entries = isFolder(node)
     ? Object.entries(node.children).sort(([a, ca], [b, cb]) => {
