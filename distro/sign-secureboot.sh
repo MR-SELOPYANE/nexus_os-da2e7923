@@ -8,7 +8,7 @@ HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 KEYDIR="${NEXUS_MOK_DIR:-$HERE/keys}"
 CMD="${1:-help}"
 
-need() { command -v "$1" >/dev/null || { echo "ERROR: missing $1 (dnf install $2)" >&2; exit 1; }; }
+need() { command -v "$1" >/dev/null || { echo "ERROR: missing $1 (apt-get install $2)" >&2; exit 1; }; }
 
 case "$CMD" in
 generate)
@@ -24,8 +24,7 @@ generate)
 sign)
   ISOROOT="${2:-}"
   [ -d "$ISOROOT" ] || { echo "usage: $0 sign <extracted-iso-root>" >&2; exit 1; }
-  need sbsign sbsigntools
-  need pesign pesign
+  need sbsign sbsigntool
   [ -f "$KEYDIR/MOK.key" ] || { echo "ERROR: run '$0 generate' first." >&2; exit 1; }
   # Sign every EFI binary and the kernel shipped on the media.
   while IFS= read -r -d '' f; do
