@@ -1,7 +1,7 @@
 // Client bridge to the real Linux device API exposed by /opt/nexus/server.mjs.
 //
 // On the booted NEXUS ISO these calls hit real /proc, real systemd, real
-// NetworkManager/UPower/PipeWire, real dnf and real /home/nexus. In a browser
+// NetworkManager/UPower/PipeWire, real apt/dpkg and real /home/nexus. In a browser
 // (preview or published web build) the probe fails and every NEXUS subsystem
 // stays on its built-in simulation.
 

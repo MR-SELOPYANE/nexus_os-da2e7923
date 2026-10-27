@@ -2,7 +2,7 @@
 Description=NEXUS OS update channel
 After=network-online.target
 Wants=network-online.target
-ConditionPathExists=/etc/yum.repos.d/nexus.repo
+ConditionPathExists=/etc/apt/sources.list.d/nexus.sources
 
 [Service]
 Type=oneshot
