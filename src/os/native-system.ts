@@ -1,7 +1,7 @@
 // Client bridge to the real Linux device API exposed by /opt/nexus/server.mjs.
 //
 // On the booted NEXUS ISO these calls hit real /proc, real systemd, real
-// NetworkManager/UPower/PipeWire, real dnf and real /home/nexus. In a browser
+// NetworkManager/UPower/PipeWire, real apt/dpkg and real /home/nexus. In a browser
 // (preview or published web build) the probe fails and every NEXUS subsystem
 // stays on its built-in simulation.
 
@@ -100,7 +100,7 @@ export interface DesktopApp {
   terminal: boolean;
 }
 
-export interface RpmPackage {
+export interface DebPackage {
   name: string;
   version?: string;
   summary?: string;
@@ -241,15 +241,15 @@ export const hostApps = {
   launch: (id: string) => post<{ started: boolean; name?: string }>("/nexus/apps?op=launch", { id }),
 };
 
-// --------------------------------------------------------------- packages
+// ------------------------------------------------------------------- packages
 export const hostPkg = {
-  installed: () => req<{ packages: RpmPackage[] }>("/nexus/pkg?op=list", undefined, 60_000).then((r) => r.packages),
+  installed: () => req<{ packages: DebPackage[] }>("/nexus/pkg?op=list", undefined, 60_000).then((r) => r.packages),
   search: (q: string) =>
-    req<{ packages: RpmPackage[] }>(`/nexus/pkg?op=search&q=${encodeURIComponent(q)}`, undefined, 60_000).then(
+    req<{ packages: DebPackage[] }>(`/nexus/pkg?op=search&q=${encodeURIComponent(q)}`, undefined, 60_000).then(
       (r) => r.packages,
     ),
   updates: () =>
-    req<{ packages: RpmPackage[]; hasUpdates: boolean }>("/nexus/pkg?op=updates", undefined, 120_000),
+    req<{ packages: DebPackage[]; hasUpdates: boolean }>("/nexus/pkg?op=updates", undefined, 120_000),
   install: (name: string) => post<{ ok: boolean; log: string }>("/nexus/pkg?op=install", { name }, 15 * 60_000),
   remove: (name: string) => post<{ ok: boolean; log: string }>("/nexus/pkg?op=remove", { name }, 5 * 60_000),
   upgradeAll: () => post<{ ok: boolean; log: string }>("/nexus/pkg?op=update", {}, 30 * 60_000),

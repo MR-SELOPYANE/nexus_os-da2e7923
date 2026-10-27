@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { Package, Search, RefreshCw, Download, Trash2, ArrowUpCircle, Loader2 } from "lucide-react";
-import { hostPkg, useNativeSystem, formatBytes, type RpmPackage } from "@/os/native-system";
+import { hostPkg, useNativeSystem, formatBytes, type DebPackage } from "@/os/native-system";
 
-/** Real dnf/rpm package manager. Off-device it explains itself instead of faking. */
+/** Real apt/dpkg package manager. Off-device it explains itself instead of faking. */
 export function Packages() {
   const native = useNativeSystem();
   const available = Boolean(native?.available && native.capabilities?.packages);
