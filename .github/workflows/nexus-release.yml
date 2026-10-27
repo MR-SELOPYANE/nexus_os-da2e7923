@@ -92,9 +92,6 @@ jobs:
           fi
           printf '%s' "$NEXUS_GPG_PRIVATE_KEY" | gpg --batch --import
           KEYID=$(gpg --list-secret-keys --with-colons | awk -F: '/^sec/{print $5; exit}')
-          {
-            echo "%no-tty-warning"? 
-          } > /dev/null
           echo "KEYID=$KEYID" >> "$GITHUB_ENV"
           gpg --armor --export "$KEYID" > nexus-archive-keyring.asc
 

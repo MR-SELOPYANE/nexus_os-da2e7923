@@ -1,6 +1,6 @@
 // NEXUS device API — real Linux integration for the shell.
 //
-// Everything here runs ONLY on the booted ISO (or any Fedora host running
+// Everything here runs ONLY on the booted ISO (or any Ubuntu host running
 // /opt/nexus/server.mjs). All endpoints are loopback-only; the browser build
 // simply gets a failed probe and keeps using the simulated subsystems.
 //
@@ -9,7 +9,7 @@
 //   /nexus/sys     stat|procs|services  + kill|renice|service
 //   /nexus/hw      status  + brightness|volume|wifi|bluetooth|rfkill
 //   /nexus/apps    list (.desktop scan) + launch
-//   /nexus/pkg     list|search + install|remove|update (dnf)
+//   /nexus/pkg     list|search + install|remove|update (apt)
 //   /nexus/auth    users + verify (PAM)
 import { spawn, execFile } from 'node:child_process';
 import { promises as fs, existsSync, readFileSync } from 'node:fs';
@@ -551,52 +551,68 @@ async function appsHandler(req, res, url) {
 }
 
 // ------------------------------------------------------------------ packages
+// apt + dpkg (Ubuntu 24.04). Privileged actions go through pkexec, falling
+// back to sudo for hosts where polkit isn't installed.
+function pkexecCmd(args) {
+  return has('pkexec') ? ['pkexec', 'env', 'DEBIAN_FRONTEND=noninteractive', ...args] : ['sudo', '-n', ...args];
+}
+
 async function pkgHandler(req, res, url) {
-  if (!has('dnf') && !has('dnf5')) return json(res, 200, { error: 'dnf unavailable', packages: [] });
-  const dnf = has('dnf5') ? 'dnf5' : 'dnf';
+  if (!has('apt-get') || !has('dpkg-query')) return json(res, 200, { error: 'apt unavailable', packages: [] });
   const op = url.searchParams.get('op') || 'list';
 
   if (req.method === 'GET') {
     if (op === 'search') {
       const q = url.searchParams.get('q') || '';
       if (!/^[\w.+\- ]{1,64}$/.test(q)) return json(res, 400, { error: 'bad query' });
-      const r = await run(dnf, ['-q', 'search', q], { timeout: 60_000 });
+      const r = await run('apt-cache', ['search', q], { timeout: 60_000 });
+      // lines look like: "name – description" (apt uses an en dash; older versions a hyphen)
       const packages = r.stdout
         .split('\n')
-        .map((l) => l.match(/^(\S+)\s*:\s*(.*)$/))
+        .map((l) => l.match(/^([\w.+-]+)\s+[–-]\s*(.*)$/))
         .filter(Boolean)
         .map((m) => ({ name: m[1], summary: m[2], installed: false }));
       return json(res, 200, { packages });
     }
     if (op === 'updates') {
-      const r = await run(dnf, ['-q', 'check-update'], { timeout: 120_000 });
+      await run('apt-get', ['update', '-q'], { timeout: 120_000 });
+      const r = await run('apt-get', ['-s', 'upgrade'], { timeout: 120_000 });
+      // simulated-upgrade lines: "Inst libfoo [1.0-1ubuntu1] (1.0-1ubuntu2 ubuntu:...)"
       const packages = r.stdout
         .split('\n')
-        .map((l) => l.trim().split(/\s+/))
-        .filter((c) => c.length === 3 && /\./.test(c[0]))
-        .map((c) => ({ name: c[0], version: c[1], repo: c[2] }));
+        .map((l) => l.match(/^Inst ([\w.+-]+) \[.*\] \((\S+)/))
+        .filter(Boolean)
+        .map((m) => ({ name: m[1], version: m[2], repo: 'ubuntu' }));
       return json(res, 200, { packages, hasUpdates: packages.length > 0 });
     }
-    const r = await run('rpm', ['-qa', '--qf', '%{NAME}\t%{VERSION}-%{RELEASE}\t%{SIZE}\n'], {
-      timeout: 60_000,
-    });
+    const r = await run(
+      'dpkg-query',
+      ['-W', "-f=${Status}\\t${Package}\\t${Version}\\t${Installed-Size}\\n"],
+      { timeout: 60_000 },
+    );
     const packages = r.stdout
       .split('\n')
       .filter(Boolean)
       .map((l) => l.split('\t'))
-      .map(([name, version, size]) => ({ name, version, size: Number(size) || 0, installed: true }))
+      .filter((c) => c[0] === 'install ok installed')
+      .map(([, name, version, sizeKb]) => ({
+        name,
+        version,
+        size: (Number(sizeKb) || 0) * 1024,
+        installed: true,
+      }))
       .sort((a, b) => a.name.localeCompare(b.name));
     return json(res, 200, { packages });
   }
 
   const body = JSON.parse((await readBody(req)) || '{}');
   const name = String(body.name || '');
-  if (op !== 'update' && !/^[\w.+\-]{1,80}$/.test(name)) return json(res, 400, { error: 'bad package name' });
+  if (op !== 'update' && !/^[\w.+-]{1,80}$/.test(name)) return json(res, 400, { error: 'bad package name' });
   const action = op === 'install' ? 'install' : op === 'remove' ? 'remove' : op === 'update' ? 'upgrade' : null;
   if (!action) return json(res, 400, { error: 'unknown pkg op' });
-  const args = ['-y', action];
-  if (action !== 'upgrade' || name) args.push(name);
-  const r = await run('pkexec', [dnf, ...args], { timeout: 15 * 60_000 });
+  const aptArgs = ['-y', '-o', 'Dpkg::Options::=--force-confdef', '-o', 'Dpkg::Options::=--force-confold', action];
+  if (action !== 'upgrade' || name) aptArgs.push(name);
+  const r = await run(pkexecCmd(['apt-get', ...aptArgs]), { timeout: 15 * 60_000 });
   return json(res, 200, {
     ok: r.code === 0,
     log: (r.stdout + r.stderr).slice(-8000),
@@ -678,7 +694,7 @@ export async function handleNexusApi(req, res, url) {
             wifi: has('nmcli'),
             bluetooth: has('bluetoothctl'),
             apps: true,
-            packages: has('dnf') || has('dnf5'),
+            packages: has('apt-get') && has('dpkg-query'),
             pam: has('pamtester'),
           },
         });
